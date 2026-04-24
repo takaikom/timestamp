@@ -586,40 +586,55 @@ function setSyncDot(state){
   dot.className='sync-dot'+(state!=='off'?' '+state:'');
   dot.title={ok:'同期済み',err:'同期エラー',syncing:'同期中…',off:'ローカル保存のみ'}[state]||'';
 }
-async function remoteLoad(){
-  const url=getGroupGasUrl();if(!url)return null;
-  try{
-    const res=await fetch(url,{cache:'no-store'});
-    const d=await res.json();
-    return d&&d.users?d:null;
-  }catch{return null;}
+// ── REMOTE（つづけると同じ方式）──
+async function remoteLoad(url){
+  const u=url||getGroupGasUrl();if(!u)return null;
+  try{const res=await fetch(u,{cache:'no-store'});const data=await res.json();return data&&data.users?data:null;}
+  catch{return null;}
 }
-async function remoteSave(){
+async function remoteSave(data){
   const url=getGroupGasUrl();if(!url)return false;
   setSyncDot('syncing');
-  try{
-    const d=loadGroupData();
-    const g=getCurrentGroup();
-    await fetch(url,{method:'POST',body:JSON.stringify({...d,groupName:g?g.name:''})});
-    setSyncDot('ok');return true;
-  }catch{setSyncDot('err');return false;}
+  try{await fetch(url,{method:'POST',body:JSON.stringify(data)});setSyncDot('ok');return true;}
+  catch{setSyncDot('err');return false;}
 }
-async function syncFromRemote(silent=false){
-  const url=getGroupGasUrl();if(!url){setSyncDot('off');return;}
-  if(!silent)setSyncDot('syncing');
-  const remote=await remoteLoad();
-  if(!remote){if(!silent){setSyncDot('err');showToast('⚠ 同期に失敗しました');}return;}
 
+async function saveData(){
   const local=loadGroupData();
-  // ユーザーマージ：ローカル優先、リモートにしかいないユーザーを追加
-  const merged={...remote};
-  delete merged.cats; // グループ単位のcatsは使わない
-  const localIds=new Set(local.users.map(u=>u.id));
-  remote.users.forEach(ru=>{
-    if(!localIds.has(ru.id)){merged.users=[...(merged.users||[]),ru];}
-    else{
-      // 同ユーザー：ローカルを維持しつつリモートにしかない記録を追加
-      const lu=local.users.find(u=>u.id===ru.id);
+  saveGroupData(local); // ローカルは必ず即時保存
+  if(getGroupGasUrl()){
+    const cg=getCurrentGroup();
+    const dataToSave=cg?{...local,groupName:cg.name}:local;
+    remoteSave(dataToSave).then(ok=>{if(!ok)setSyncDot('err');}).catch(()=>setSyncDot('err'));
+  }
+}
+
+// ── SYNC（つづけると同じロジック：ローカルを正として、リモートにしかいないユーザーだけ追加）──
+async function syncFromRemote(silent=false){
+  if(!getGroupGasUrl()){setSyncDot('off');return;}
+  if(!silent)setSyncDot('syncing');
+  const remote=await remoteLoad();if(!remote){if(!silent){setSyncDot('err');showToast('⚠ 同期に失敗しました');}return;}
+  const local=loadGroupData();
+
+  // ローカルを正として、リモートにしかいないユーザーだけ追加する
+  // （ローカルの最新データを絶対に失わない）
+  const merged={...local};
+  // deletedUsersはローカルとリモートをマージ（両方のを保持）
+  const remoteDeleted=remote.deletedUsers||[];
+  const localDeleted=(merged.deletedUsers||[]).slice();
+  remoteDeleted.forEach(ru=>{if(!localDeleted.find(u=>u.id===ru.id))localDeleted.push(ru);});
+  merged.deletedUsers=localDeleted;
+
+  (remote.users||[]).forEach(ru=>{
+    // ローカルで削除済みのユーザーはスキップ（復活させない）
+    if(merged.deletedUsers.find(u=>u.id===ru.id))return;
+    const lu=merged.users.find(u=>u.id===ru.id);
+    if(!lu){
+      // リモートにしかいないユーザーはそのまま追加
+      if(!ru.cats)ru.cats=DEFAULT_CATS.slice();
+      merged.users.push(ru);
+    }else{
+      // 同じユーザーはIDで重複除去しながら記録をマージ（ローカルにないものだけ追加）
       const localRecIds=new Set((lu.records||[]).map(r=>r.id));
       (ru.records||[]).forEach(rr=>{if(!localRecIds.has(rr.id))lu.records.push(rr);});
       lu.records.sort((a,b)=>new Date(a.startTime)-new Date(b.startTime));
@@ -627,29 +642,20 @@ async function syncFromRemote(silent=false){
       if(!lu.cats&&ru.cats)lu.cats=ru.cats;
     }
   });
-  // ローカルのユーザーを保持（リモートで削除されても消さない）
-  local.users.forEach(lu=>{
-    if(!(merged.users||[]).find(u=>u.id===lu.id))merged.users.push(lu);
-  });
-  // グループ名をリモートから更新
+
+  // グループ名をリモートから反映（GAS連携が設定されているグループのみ）
   if(remote.groupName){
-    const gs=loadGroups(),id=getCurrentGroupId();
+    const gs=loadGroups();const id=getCurrentGroupId();
     const g=gs.find(g=>g.id===id);
     if(g&&g.gasUrl&&remote.groupName!==g.name){g.name=remote.groupName;saveGroups(gs);}
   }
   saveGroupData(merged);
-  if(!silent){setSyncDot('ok');showToast('✅ 同期しました');}
-  else setSyncDot('ok');
   // ピンが有効かチェック
   const pinned=getPinnedUserId();
-  const d2=loadGroupData();
-  if(pinned&&d2.users.find(u=>u.id===pinned))setCurrentUserId(pinned);
+  if(pinned&&merged.users.find(u=>u.id===pinned))setCurrentUserId(pinned);
+  if(!silent){setSyncDot('ok');showToast('✅ 同期しました');}
+  else setSyncDot('ok');
   renderAll();
-}
-
-async function saveData(){
-  // ローカルは既に mutate 系で保存済み
-  if(getGroupGasUrl())remoteSave().catch(()=>setSyncDot('err'));
 }
 
 // ════════════════════════════════════════
@@ -1119,9 +1125,14 @@ function renderGroupManage(){
       </div>`;
       document.body.appendChild(ov);
       const inp=ov.querySelector('#rgi2');setTimeout(()=>{inp.focus();inp.select();},50);
-      const doSave=()=>{
+      const doSave=async()=>{
         const name=inp.value.trim();if(!name){ov.remove();return;}
         const gs3=loadGroups();const g3=gs3.find(g=>g.id===gid);if(g3){g3.name=name;saveGroups(gs3);}
+        // GAS連携中なら名前をリモートにも保存
+        if(g3&&g3.gasUrl){
+          const local=loadGroupData();
+          remoteSave({...local,groupName:name}).then(ok=>{if(!ok)setSyncDot('err');});
+        }
         ov.remove();renderAll();showToast(`✅ グループ名を「${name}」に変更しました`);
       };
       ov.querySelector('#rgo2').addEventListener('click',doSave);
@@ -1295,9 +1306,57 @@ function refreshGasStatus(){
 document.getElementById('gas-save-btn').addEventListener('click',async()=>{
   const url=document.getElementById('gas-url-input').value.trim();
   if(!url){showToast('⚠ URLを入力してください');return;}
-  setGroupGasUrl(url);refreshGasStatus();renderGroupTabs();
-  showToast('🔗 接続中…');const ok=await remoteSave();
-  showToast(ok?'✅ GAS連携を設定しました':'⚠ 接続に失敗しました');
+  const status=document.getElementById('gas-status');
+  status.textContent='接続確認中…';setSyncDot('syncing');
+  try{
+    const data=await remoteLoad(url);setGroupGasUrl(url);
+    if(data&&data.users){
+      const local=loadGroupData();
+      // 初回接続：リモートを土台にしてローカルユーザーを追加（つづけると同じ）
+      const merged={...data};
+      delete merged.cats;
+      // グループ名をリモートから取得
+      if(data.groupName){
+        const gs=loadGroups();const id=getCurrentGroupId();
+        const g=gs.find(g=>g.id===id);
+        if(g&&data.groupName!==g.name){g.name=data.groupName;saveGroups(gs);}
+      }
+      // deletedUsersをマージ
+      const mergedDeleted=[...(local.deletedUsers||[])];
+      (data.deletedUsers||[]).forEach(ru=>{if(!mergedDeleted.find(u=>u.id===ru.id))mergedDeleted.push(ru);});
+      merged.deletedUsers=mergedDeleted;
+      // リモートから来たusersのうち削除済みを除外
+      merged.users=(merged.users||[]).filter(ru=>!mergedDeleted.find(u=>u.id===ru.id));
+      // ローカルにしかいないユーザーを追加（削除済みは除く）
+      local.users.forEach(lu=>{
+        if(!merged.users.find(ru=>ru.id===lu.id)&&!mergedDeleted.find(u=>u.id===lu.id)){
+          if(!lu.cats)lu.cats=DEFAULT_CATS.slice();
+          merged.users.push(lu);
+        }
+      });
+      // 各ユーザーにcatsがなければデフォルトを付与
+      merged.users.forEach(u=>{if(!u.cats)u.cats=DEFAULT_CATS.slice();});
+      saveGroupData(merged);
+    }else{
+      // リモートにデータなし → 自分のデータをアップロード
+      const local=loadGroupData();
+      const cg=getCurrentGroup();
+      await remoteSave({...local,groupName:cg?cg.name:''});
+    }
+    setSyncDot('ok');status.textContent='✅ 接続成功！';
+    renderGroupTabs();
+    // ピンが有効ならそのままメイン画面、なければユーザー再選択
+    const pinned=getPinnedUserId();const d=loadGroupData();
+    if(pinned&&d.users.find(u=>u.id===pinned)){
+      setCurrentUserId(pinned);renderAll();
+      showToast('✅ GAS連携を設定しました');
+    }else{
+      // ウェルカムStep2でユーザー選択
+      const cg=getCurrentGroup();
+      showWelcome();
+      renderWelcomeStep2(cg||{id:getCurrentGroupId(),name:'グループ',gasUrl:url});
+    }
+  }catch(e){setSyncDot('err');status.textContent='❌ 接続できませんでした';showToast('⚠ 接続に失敗しました');}
 });
 document.getElementById('gas-clear-btn').addEventListener('click',()=>{
   if(!confirm('GAS連携を解除しますか？'))return;
@@ -1436,9 +1495,14 @@ document.getElementById('menu-rename-group-btn').addEventListener('click',()=>{
   </div>`;
   document.body.appendChild(ov);
   const inp=ov.querySelector('#rgi');setTimeout(()=>{inp.focus();inp.select();},50);
-  const doSave=()=>{
+  const doSave=async()=>{
     const name=inp.value.trim();if(!name||name===cg.name){ov.remove();return;}
     const gs=loadGroups();const g=gs.find(g=>g.id===cg.id);if(g){g.name=name;saveGroups(gs);}
+    // GAS連携中なら名前をリモートにも保存
+    if(getGroupGasUrl()){
+      const local=loadGroupData();
+      remoteSave({...local,groupName:name}).then(ok=>{if(!ok)setSyncDot('err');});
+    }
     ov.remove();renderAll();showToast(`✅ グループ名を「${name}」に変更しました`);
   };
   ov.querySelector('#rgo').addEventListener('click',doSave);
@@ -1693,22 +1757,27 @@ setInterval(()=>{
 },1000);
 
 // ── 定期同期（30秒）──
+// 自動同期：UIを強制rerenderしない（ユーザー操作を妨げない）
+// 代わりに30秒ごとにリモートのデータをバックグラウンドでローカルにマージするだけ
 let _autoSyncTimer=null;
 function scheduleAutoSync(){
   if(_autoSyncTimer)clearInterval(_autoSyncTimer);
   _autoSyncTimer=setInterval(async()=>{
     if(!getGroupGasUrl())return;
+    // silent=true：画面rerenderなし、syncDotも変えない
     const remote=await remoteLoad();if(!remote)return;
     const local=loadGroupData();
-    // 他ユーザーのデータをバックグラウンドでマージ（UIは変えない）
+    // 他ユーザーのデータだけ静かにマージ
     let changed=false;
+    // 削除済みユーザーを先にマージして復活チェックに使う
     const remoteDeleted=remote.deletedUsers||[];
-    const localDeleted=(local.deletedUsers||[]).slice();
+    const localDeleted=local.deletedUsers||[];
     remoteDeleted.forEach(ru=>{if(!localDeleted.find(u=>u.id===ru.id)){localDeleted.push(ru);changed=true;}});
     (remote.users||[]).forEach(ru=>{
+      // ローカルで削除済みのユーザーはスキップ（復活させない）
       if(localDeleted.find(u=>u.id===ru.id))return;
       const lu=local.users.find(u=>u.id===ru.id);
-      if(!lu){local.users.push(ru);changed=true;}
+      if(!lu){if(!ru.cats)ru.cats=DEFAULT_CATS.slice();local.users.push(ru);changed=true;}
       else{
         const lrIds=new Set((lu.records||[]).map(r=>r.id));
         (ru.records||[]).forEach(rr=>{if(!lrIds.has(rr.id)){lu.records.push(rr);changed=true;}});
@@ -1756,26 +1825,31 @@ async function renderWelcomeStep2(group){
 
   if(group.gasUrl){
     setSyncDot('syncing');
-    const remote=await remoteLoad();
+    const remote=await remoteLoad(group.gasUrl);
     if(remote){
-      // グループ名リモート反映
+      // グループ名をリモートから反映
       if(remote.groupName&&remote.groupName!==group.name){
         const gs=loadGroups();const g=gs.find(g=>g.id===group.id);
         if(g){g.name=remote.groupName;saveGroups(gs);group=g;}
         document.getElementById('wc-group-title').textContent=group.name;
       }
-      // ローカルとリモートをマージ
       const local=loadGroupData();
-      const merged={...remote};
-      delete merged.cats; // グループ単位のcatsは使わない
-      // deletedUsersマージ
+      // ローカルを正として、リモートにしかいないユーザーだけ追加（つづけると同じ）
+      const merged={...local};
       const mergedDeleted=[...(local.deletedUsers||[])];
       (remote.deletedUsers||[]).forEach(ru=>{if(!mergedDeleted.find(u=>u.id===ru.id))mergedDeleted.push(ru);});
       merged.deletedUsers=mergedDeleted;
-      merged.users=(merged.users||[]).filter(ru=>!mergedDeleted.find(u=>u.id===ru.id));
-      local.users.forEach(lu=>{if(!merged.users.find(ru=>ru.id===lu.id)&&!mergedDeleted.find(u=>u.id===lu.id))merged.users.push(lu);});
-      saveGroupData(merged);
-      setSyncDot('ok');
+      (remote.users||[]).forEach(ru=>{
+        if(mergedDeleted.find(u=>u.id===ru.id))return;
+        const lu=merged.users.find(u=>u.id===ru.id);
+        if(!lu){if(!ru.cats)ru.cats=DEFAULT_CATS.slice();merged.users.push(ru);}
+        else{
+          const localRecIds=new Set((lu.records||[]).map(r=>r.id));
+          (ru.records||[]).forEach(rr=>{if(!localRecIds.has(rr.id))lu.records.push(rr);});
+          if(!lu.cats&&ru.cats)lu.cats=ru.cats;
+        }
+      });
+      saveGroupData(merged);setSyncDot('ok');
     }else{setSyncDot('err');}
   }else{setSyncDot('off');}
 
