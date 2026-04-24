@@ -127,7 +127,8 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .card-actions{display:flex;gap:4px;flex-shrink:0;}
 .act-btn{width:26px;height:26px;border-radius:7px;border:1px solid var(--border2);background:var(--surface2);color:var(--text3);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;}
 .act-btn.del:active{background:var(--red-light);color:var(--red-mid);}
-.act-btn.edit:active{background:var(--amber-light);color:var(--amber);}
+.act-btn.edit{background:var(--amber-light);color:var(--amber);border-color:var(--amber);}
+.act-btn.edit:active{opacity:.7;}
 
 /* ── AGG ── */
 .toggle-group{display:flex;gap:6px;margin-bottom:16px;}
@@ -198,8 +199,11 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .sheet-save-btn{flex:2;height:46px;border-radius:12px;border:none;background:var(--accent);color:white;font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:700;cursor:pointer;}
 .sheet-save-btn:active{background:var(--accent-dark);}
 .dt-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px;}
-input[type="datetime-local"]{height:42px;border:1.5px solid var(--border2);border-radius:10px;padding:0 10px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text);background:var(--bg);outline:none;width:100%;transition:border-color .2s;color-scheme:light;}
-input[type="datetime-local"]:focus{border-color:var(--amber);}
+.dt-cell{display:flex;flex-direction:column;gap:5px;}
+.dt-date-input{height:42px;border:1.5px solid var(--border2);border-radius:10px;padding:0 10px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text);background:var(--bg);outline:none;width:100%;transition:border-color .2s;color-scheme:light;}
+.dt-date-input:focus{border-color:var(--amber);}
+.dt-time-input{height:38px;border:1.5px solid var(--border2);border-radius:10px;padding:0 10px;font-family:'DM Mono',monospace;font-size:13px;color:var(--text);background:var(--bg);outline:none;width:100%;transition:border-color .2s;text-align:center;letter-spacing:1px;}
+.dt-time-input:focus{border-color:var(--amber);}
 .dur-hint{text-align:right;font-size:12px;font-family:'DM Mono',monospace;color:var(--amber);min-height:18px;margin-bottom:10px;}
 .dur-hint.err{color:var(--red-mid);}
 textarea.text-input{height:66px;padding:10px 12px;resize:none;line-height:1.5;width:100%;}
@@ -461,8 +465,16 @@ textarea.text-input{height:66px;padding:10px 12px;resize:none;line-height:1.5;wi
       <div class="sheet-handle"></div>
       <div class="sheet-title">記録を編集</div>
       <div class="dt-grid">
-        <div><div class="sheet-label">開始時刻</div><input type="datetime-local" id="edit-start"></div>
-        <div><div class="sheet-label">終了時刻</div><input type="datetime-local" id="edit-end"></div>
+        <div class="dt-cell">
+          <div class="sheet-label">開始日</div>
+          <input type="date" id="edit-start-date" class="dt-date-input">
+          <input type="text" id="edit-start-time" class="dt-time-input" placeholder="HH:MM" maxlength="5" inputmode="numeric" pattern="[0-9:]*">
+        </div>
+        <div class="dt-cell">
+          <div class="sheet-label">終了日</div>
+          <input type="date" id="edit-end-date" class="dt-date-input">
+          <input type="text" id="edit-end-time" class="dt-time-input" placeholder="HH:MM" maxlength="5" inputmode="numeric" pattern="[0-9:]*">
+        </div>
       </div>
       <div class="dur-hint" id="edit-dur-hint"></div>
       <div class="sheet-label">カテゴリ</div>
@@ -689,7 +701,7 @@ const fmt=ms=>{if(ms==null||ms<0)return'--:--';const m=Math.floor(ms/60000);retu
 const fdt=iso=>{if(!iso)return'';const d=new Date(iso);return`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;};
 const ymd=iso=>{const d=new Date(iso);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
 const ym =iso=>{const d=new Date(iso);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;};
-const toLV=iso=>{if(!iso)return'';const d=new Date(iso),p=n=>String(n).padStart(2,'0');return`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;};
+
 function showToast(msg){const t=document.getElementById('toast');t.innerHTML=esc(msg);t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400);}
 function updateDateDisplay(){const d=new Date();const days=['日','月','火','水','木','金','土'];document.getElementById('date-display').textContent=`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${days[d.getDay()]}）`;}
 
@@ -971,7 +983,7 @@ function renderRecordList(){
   </div>
   <div class="record-dur">${dur}</div>
   <div class="card-actions">
-    <button class="act-btn edit" data-id="${r.id}">✎</button>
+    <button class="act-btn edit" data-id="${r.id}">✏️</button>
     <button class="act-btn del" data-id="${r.id}">✕</button>
   </div>
 </div>`;
@@ -992,11 +1004,36 @@ function deleteRecord(id){
 // ════════════════════════════════════════
 // EDIT SHEET
 // ════════════════════════════════════════
+// 日付・時刻ヘルパー
+function dtToDateStr(iso){if(!iso)return '';const d=new Date(iso);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function dtToTimeStr(iso){if(!iso)return '';const d=new Date(iso);return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;}
+function dateTimeToISO(dateStr,timeStr){
+  if(!dateStr)return '';
+  const t=timeStr.trim()||'00:00';
+  const [h,m]=(t+':00').split(':');
+  const d=new Date(dateStr+'T'+String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':00');
+  return isNaN(d)?'':d.toISOString();
+}
+// 時刻入力の自動フォーマット（数字入力で自動コロン挿入）
+function bindTimeInput(el){
+  el.addEventListener('input',()=>{
+    let v=el.value.replace(/[^0-9]/g,'');
+    if(v.length>=3)v=v.slice(0,2)+':'+v.slice(2,4);
+    el.value=v;
+    updateEditDurHint();
+  });
+  el.addEventListener('keydown',e=>{
+    if(e.key==='Backspace'&&el.value.endsWith(':'))el.value=el.value.slice(0,-1);
+  });
+}
+
 function openEdit(id){
   const r=getRecords().find(r=>r.id===id);if(!r)return;
   editingId=id;
-  document.getElementById('edit-start').value=toLV(r.startTime);
-  document.getElementById('edit-end').value=r.endTime?toLV(r.endTime):'';
+  document.getElementById('edit-start-date').value=dtToDateStr(r.startTime);
+  document.getElementById('edit-start-time').value=dtToTimeStr(r.startTime);
+  document.getElementById('edit-end-date').value=dtToDateStr(r.endTime);
+  document.getElementById('edit-end-time').value=dtToTimeStr(r.endTime);
   document.getElementById('edit-cat-custom').value='';
   document.getElementById('edit-memo').value=r.memo||'';
   const cats=getCats();
@@ -1010,15 +1047,18 @@ function openEdit(id){
   document.getElementById('edit-sheet').classList.add('open');
 }
 function updateEditDurHint(){
-  const s=document.getElementById('edit-start').value,e=document.getElementById('edit-end').value;
+  const s=dateTimeToISO(document.getElementById('edit-start-date').value,document.getElementById('edit-start-time').value);
+  const e=dateTimeToISO(document.getElementById('edit-end-date').value,document.getElementById('edit-end-time').value);
   const hint=document.getElementById('edit-dur-hint');
   if(s&&e){const diff=new Date(e)-new Date(s);hint.textContent=diff<=0?'⚠ 終了が開始より前です':`⏱ ${fmt(diff)}`;hint.className='dur-hint'+(diff<=0?' err':'');}
   else{hint.textContent='';hint.className='dur-hint';}
 }
-document.getElementById('edit-start').addEventListener('input',updateEditDurHint);
-document.getElementById('edit-end').addEventListener('input',updateEditDurHint);
+['edit-start-date','edit-end-date'].forEach(id=>document.getElementById(id).addEventListener('change',updateEditDurHint));
+bindTimeInput(document.getElementById('edit-start-time'));
+bindTimeInput(document.getElementById('edit-end-time'));
 document.getElementById('edit-save-btn').addEventListener('click',()=>{
-  const s=document.getElementById('edit-start').value,e=document.getElementById('edit-end').value;
+  const s=dateTimeToISO(document.getElementById('edit-start-date').value,document.getElementById('edit-start-time').value);
+  const e=dateTimeToISO(document.getElementById('edit-end-date').value,document.getElementById('edit-end-time').value);
   const diff=s&&e?new Date(e)-new Date(s):null;
   if(diff!==null&&diff<=0){showToast('⚠ 終了時刻を確認してください');return;}
   const sel=document.getElementById('edit-cat-picker').querySelector('.cat-pick-btn.selected');
@@ -1026,7 +1066,7 @@ document.getElementById('edit-save-btn').addEventListener('click',()=>{
   const memo=document.getElementById('edit-memo').value.trim();
   mutateUserRecords(recs=>recs.map(r=>{
     if(r.id!==editingId)return r;
-    const ns=s?new Date(s).toISOString():r.startTime,ne=e?new Date(e).toISOString():r.endTime;
+    const ns=s||r.startTime,ne=e||r.endTime;
     const dur=ns&&ne?new Date(ne)-new Date(ns):r.duration;
     return{...r,category:cat,memo,startTime:ns,endTime:ne,duration:dur>0?dur:r.duration};
   }));
