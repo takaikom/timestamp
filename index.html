@@ -186,7 +186,9 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 /* ── BOTTOM SHEET ── */
 .sheet-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;align-items:flex-end;justify-content:center;}
 .sheet-overlay.open{display:flex;}
-.sheet{background:var(--surface);border-radius:20px 20px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom));width:100%;max-width:480px;animation:slideUp .24s cubic-bezier(.22,1,.36,1);max-height:90vh;overflow-y:auto;}
+.sheet{background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:480px;animation:slideUp .24s cubic-bezier(.22,1,.36,1);max-height:90vh;display:flex;flex-direction:column;overflow:hidden;}
+.sheet-scroll{flex:1;overflow-y:auto;padding:20px 20px 8px;}
+.sheet-footer{padding:8px 20px calc(16px + env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;}
 @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
 .sheet-handle{width:36px;height:4px;background:var(--border2);border-radius:99px;margin:0 auto 20px;}
 .sheet-title{font-size:16px;font-weight:700;margin-bottom:16px;}
@@ -382,90 +384,96 @@ textarea.text-input{height:66px;padding:10px 12px;resize:none;line-height:1.5;wi
 <!-- ══ MENU SHEET ══ -->
 <div class="sheet-overlay" id="menu-sheet">
   <div class="sheet">
-    <div class="sheet-handle"></div>
-    <div class="sheet-title" id="menu-sheet-title">メニュー</div>
-    <!-- 親モードトグル -->
-    <div style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:14px 16px;border-radius:12px;border:1px solid var(--border);background:var(--surface);margin-bottom:8px;">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <div class="menu-icon" style="background:#EAF3DE;">👨‍👩‍👧</div>
-        <div><div style="font-size:14px;font-weight:500;color:var(--text);">全員を表示する（親モード）</div><div class="menu-item-desc">ONにすると全員のタブを確認できます</div></div>
+    <div class="sheet-scroll">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" id="menu-sheet-title">メニュー</div>
+      <!-- 親モードトグル -->
+      <div style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:14px 16px;border-radius:12px;border:1px solid var(--border);background:var(--surface);margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="menu-icon" style="background:#EAF3DE;">👨‍👩‍👧</div>
+          <div><div style="font-size:14px;font-weight:500;color:var(--text);">全員を表示する（親モード）</div><div class="menu-item-desc">ONにすると全員のタブを確認できます</div></div>
+        </div>
+        <label style="position:relative;width:44px;height:26px;flex-shrink:0;display:block;cursor:pointer;">
+          <input type="checkbox" id="parent-mode-toggle" style="position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1;">
+          <span id="parent-mode-track" style="position:absolute;inset:0;background:var(--border2);border-radius:99px;transition:background .2s;pointer-events:none;"></span>
+        </label>
       </div>
-      <label style="position:relative;width:44px;height:26px;flex-shrink:0;display:block;cursor:pointer;">
-        <input type="checkbox" id="parent-mode-toggle" style="position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1;">
-        <span id="parent-mode-track" style="position:absolute;inset:0;background:var(--border2);border-radius:99px;transition:background .2s;pointer-events:none;"></span>
-      </label>
+      <!-- グループ設定 -->
+      <button class="menu-item" id="menu-rename-group-btn">
+        <div class="menu-icon" style="background:var(--blue-light);">✏️</div>
+        <div><div id="menu-rename-group-label">グループ名を変更</div><div class="menu-item-desc" id="menu-group-name-desc"></div></div>
+      </button>
+      <button class="menu-item" id="menu-sync-btn">
+        <div class="menu-icon" style="background:var(--blue-light);">🔄</div>
+        <div><div>今すぐ同期</div><div class="menu-item-desc" id="menu-sync-desc">GASと手動で同期します</div></div>
+      </button>
+      <button class="menu-item" id="menu-delete-group-btn">
+        <div class="menu-icon" style="background:var(--red-light);">🗑️</div>
+        <div><div id="menu-delete-group-label">このグループを削除</div><div class="menu-item-desc">一時削除（復元可能）</div></div>
+      </button>
+      <hr class="sheet-divider">
+      <!-- ユーザー設定 -->
+      <button class="menu-item" id="menu-switch-user-btn">
+        <div class="menu-icon" style="background:var(--blue-light);">🔄</div>
+        <div><div>ユーザーを切り替える</div><div class="menu-item-desc">別のユーザーとして使う（ピン変更）</div></div>
+      </button>
+      <button class="menu-item" id="menu-rename-user-btn">
+        <div class="menu-icon" style="background:var(--accent-light);">👤</div>
+        <div><div id="menu-rename-user-label">名前を変更</div><div class="menu-item-desc">このユーザーの名前を変更</div></div>
+      </button>
+      <button class="menu-item" id="menu-delete-user-btn">
+        <div class="menu-icon" style="background:var(--red-light);">🗑️</div>
+        <div><div>このユーザーを削除</div><div class="menu-item-desc">一時削除（復元可能）</div></div>
+      </button>
+      <button class="menu-item" id="menu-deleted-users-btn">
+        <div class="menu-icon" style="background:var(--amber-light);">👤</div>
+        <div><div>削除したユーザー <span id="menu-deleted-users-badge" style="display:none;background:var(--amber);color:white;border-radius:99px;font-size:11px;padding:1px 7px;margin-left:4px;"></span></div><div class="menu-item-desc">一時削除したユーザーを復元</div></div>
+      </button>
+      <button class="menu-item" id="menu-deleted-groups-btn">
+        <div class="menu-icon" style="background:var(--pause-light);">📂</div>
+        <div><div>削除したグループ <span id="menu-deleted-groups-badge" style="display:none;background:var(--pause);color:white;border-radius:99px;font-size:11px;padding:1px 7px;margin-left:4px;"></span></div><div class="menu-item-desc">一時削除したグループを復元</div></div>
+      </button>
+      <hr class="sheet-divider">
+      <!-- データ操作 -->
+      <button class="menu-item" id="menu-export-btn">
+        <div class="menu-icon" style="background:var(--accent-light);">⬇</div>
+        <div><div>エクスポート（CSV）</div><div class="menu-item-desc">現在のユーザーのRawデータ</div></div>
+      </button>
+      <button class="menu-item" id="menu-backup-btn">
+        <div class="menu-icon" style="background:var(--green-light);">💾</div>
+        <div><div>JSONバックアップ</div><div class="menu-item-desc">グループ全データをJSON保存</div></div>
+      </button>
+      <button class="menu-item" id="menu-import-btn">
+        <div class="menu-icon" style="background:var(--amber-light);">⬆</div>
+        <div><div>インポート</div><div class="menu-item-desc">JSONバックアップから復元</div></div>
+      </button>
     </div>
-    <!-- グループ設定 -->
-    <button class="menu-item" id="menu-rename-group-btn">
-      <div class="menu-icon" style="background:var(--blue-light);">✏️</div>
-      <div><div id="menu-rename-group-label">グループ名を変更</div><div class="menu-item-desc" id="menu-group-name-desc"></div></div>
-    </button>
-    <button class="menu-item" id="menu-sync-btn">
-      <div class="menu-icon" style="background:var(--blue-light);">🔄</div>
-      <div><div>今すぐ同期</div><div class="menu-item-desc" id="menu-sync-desc">GASと手動で同期します</div></div>
-    </button>
-    <button class="menu-item" id="menu-delete-group-btn">
-      <div class="menu-icon" style="background:var(--red-light);">🗑️</div>
-      <div><div id="menu-delete-group-label">このグループを削除</div><div class="menu-item-desc">一時削除（復元可能）</div></div>
-    </button>
-    <hr class="sheet-divider">
-    <!-- ユーザー設定 -->
-    <button class="menu-item" id="menu-switch-user-btn">
-      <div class="menu-icon" style="background:var(--blue-light);">🔄</div>
-      <div><div>ユーザーを切り替える</div><div class="menu-item-desc">別のユーザーとして使う（ピン変更）</div></div>
-    </button>
-    <button class="menu-item" id="menu-rename-user-btn">
-      <div class="menu-icon" style="background:var(--accent-light);">👤</div>
-      <div><div id="menu-rename-user-label">名前を変更</div><div class="menu-item-desc">このユーザーの名前を変更</div></div>
-    </button>
-    <button class="menu-item" id="menu-delete-user-btn">
-      <div class="menu-icon" style="background:var(--red-light);">🗑️</div>
-      <div><div>このユーザーを削除</div><div class="menu-item-desc">一時削除（復元可能）</div></div>
-    </button>
-    <button class="menu-item" id="menu-deleted-users-btn">
-      <div class="menu-icon" style="background:var(--amber-light);">👤</div>
-      <div><div>削除したユーザー <span id="menu-deleted-users-badge" style="display:none;background:var(--amber);color:white;border-radius:99px;font-size:11px;padding:1px 7px;margin-left:4px;"></span></div><div class="menu-item-desc">一時削除したユーザーを復元</div></div>
-    </button>
-    <button class="menu-item" id="menu-deleted-groups-btn">
-      <div class="menu-icon" style="background:var(--pause-light);">📂</div>
-      <div><div>削除したグループ <span id="menu-deleted-groups-badge" style="display:none;background:var(--pause);color:white;border-radius:99px;font-size:11px;padding:1px 7px;margin-left:4px;"></span></div><div class="menu-item-desc">一時削除したグループを復元</div></div>
-    </button>
-    <hr class="sheet-divider">
-    <!-- データ操作 -->
-    <button class="menu-item" id="menu-export-btn">
-      <div class="menu-icon" style="background:var(--accent-light);">⬇</div>
-      <div><div>エクスポート（CSV）</div><div class="menu-item-desc">現在のユーザーのRawデータ</div></div>
-    </button>
-    <button class="menu-item" id="menu-backup-btn">
-      <div class="menu-icon" style="background:var(--green-light);">💾</div>
-      <div><div>JSONバックアップ</div><div class="menu-item-desc">グループ全データをJSON保存</div></div>
-    </button>
-    <button class="menu-item" id="menu-import-btn">
-      <div class="menu-icon" style="background:var(--amber-light);">⬆</div>
-      <div><div>インポート</div><div class="menu-item-desc">JSONバックアップから復元</div></div>
-    </button>
-    <button class="sheet-close-btn" id="menu-close-btn">閉じる</button>
+    <div class="sheet-footer">
+      <button class="sheet-close-btn" id="menu-close-btn">閉じる</button>
+    </div>
   </div>
 </div>
 
 <!-- ══ EDIT SHEET ══ -->
 <div class="sheet-overlay" id="edit-sheet">
   <div class="sheet">
-    <div class="sheet-handle"></div>
-    <div class="sheet-title">記録を編集</div>
-    <div class="dt-grid">
-      <div><div class="sheet-label">開始時刻</div><input type="datetime-local" id="edit-start"></div>
-      <div><div class="sheet-label">終了時刻</div><input type="datetime-local" id="edit-end"></div>
-    </div>
-    <div class="dur-hint" id="edit-dur-hint"></div>
-    <div class="sheet-label">カテゴリ</div>
-    <div class="edit-cat-picker" id="edit-cat-picker"></div>
-    <input class="text-input" id="edit-cat-custom" type="text" placeholder="直接入力（任意）" maxlength="20" style="margin-bottom:14px;width:100%;">
-    <div class="sheet-label">メモ</div>
-    <textarea class="text-input" id="edit-memo" style="height:66px;padding:10px 12px;resize:none;line-height:1.5;width:100%;"></textarea>
-    <div class="sheet-actions">
-      <button class="sheet-cancel-btn" id="edit-cancel-btn">キャンセル</button>
-      <button class="sheet-save-btn" id="edit-save-btn">保存する</button>
+    <div class="sheet-scroll">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">記録を編集</div>
+      <div class="dt-grid">
+        <div><div class="sheet-label">開始時刻</div><input type="datetime-local" id="edit-start"></div>
+        <div><div class="sheet-label">終了時刻</div><input type="datetime-local" id="edit-end"></div>
+      </div>
+      <div class="dur-hint" id="edit-dur-hint"></div>
+      <div class="sheet-label">カテゴリ</div>
+      <div class="edit-cat-picker" id="edit-cat-picker"></div>
+      <input class="text-input" id="edit-cat-custom" type="text" placeholder="直接入力（任意）" maxlength="20" style="margin-bottom:14px;width:100%;">
+      <div class="sheet-label">メモ</div>
+      <textarea class="text-input" id="edit-memo" style="height:66px;padding:10px 12px;resize:none;line-height:1.5;width:100%;"></textarea>
+      <div class="sheet-actions">
+        <button class="sheet-cancel-btn" id="edit-cancel-btn">キャンセル</button>
+        <button class="sheet-save-btn" id="edit-save-btn">保存する</button>
+      </div>
     </div>
   </div>
 </div>
@@ -820,6 +828,10 @@ function showAddUserForm(){
       if(d.users.find(u=>u.name===name)){showToast(`「${name}」は既に存在します`);return;}
       const id='u'+Date.now();
       d.users.push({id,name,cats:DEFAULT_CATS.slice(),records:[]});
+      saveGroupData(d);
+      saveData();
+      renderAll();
+      showToast(`「${name}」を追加しました`);
     }
   });
 }
