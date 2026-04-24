@@ -346,7 +346,7 @@ textarea.text-input{height:66px;padding:10px 12px;resize:none;line-height:1.5;wi
   </div>
   <!-- カテゴリ管理 (グループ共通) -->
   <div class="settings-card">
-    <div class="settings-card-title">📂 カテゴリ（グループ共通）</div>
+    <div class="settings-card-title">📂 カテゴリ（自分用）</div>
     <div class="cat-chip-list" id="cat-chip-list"></div>
     <div class="add-row">
       <input class="text-input" id="new-cat-input" type="text" placeholder="新しいカテゴリ名" maxlength="20">
@@ -518,7 +518,7 @@ function loadGroupData(){
   }catch{}
   // 初期化
   const uid='u'+Date.now();
-  const d={cats:DEFAULT_CATS.slice(),users:[{id:uid,name:'わたし',records:[]}],deletedUsers:[]};
+  const d={users:[{id:uid,name:'わたし',cats:DEFAULT_CATS.slice(),records:[]}],deletedUsers:[]};
   localStorage.setItem(groupDataKey(),JSON.stringify(d));
   setCurrentUserId(uid);
   return d;
@@ -554,7 +554,15 @@ function setParentMode(v){localStorage.setItem(parentKey(),v?'1':'0');}
 // CONVENIENT GETTERS
 // ════════════════════════════════════════
 function getRecords(){return getCurrentUser().records||[];}
-function getCats(){return loadGroupData().cats||DEFAULT_CATS.slice();}
+// カテゴリはユーザーごと（u.cats）。旧グループ共通(d.cats)があればマイグレーション
+function getCats(){
+  const d=loadGroupData();
+  const u=d.users.find(u=>u.id===getCurrentUserId())||d.users[0];
+  if(u.cats)return u.cats;
+  u.cats=(d.cats||DEFAULT_CATS).slice();
+  saveGroupData(d);
+  return u.cats;
+}
 
 function mutateUserRecords(fn){
   const d=loadGroupData();
@@ -564,7 +572,9 @@ function mutateUserRecords(fn){
 }
 function mutateCats(fn){
   const d=loadGroupData();
-  d.cats=fn(d.cats||DEFAULT_CATS.slice());
+  const u=d.users.find(u=>u.id===getCurrentUserId())||d.users[0];
+  if(!u.cats){u.cats=(d.cats||DEFAULT_CATS).slice();}
+  u.cats=fn(u.cats);
   saveGroupData(d);
 }
 
@@ -602,7 +612,8 @@ async function syncFromRemote(silent=false){
 
   const local=loadGroupData();
   // ユーザーマージ：ローカル優先、リモートにしかいないユーザーを追加
-  const merged={...remote,cats:remote.cats||local.cats};
+  const merged={...remote};
+  delete merged.cats; // グループ単位のcatsは使わない
   const localIds=new Set(local.users.map(u=>u.id));
   remote.users.forEach(ru=>{
     if(!localIds.has(ru.id)){merged.users=[...(merged.users||[]),ru];}
@@ -612,6 +623,8 @@ async function syncFromRemote(silent=false){
       const localRecIds=new Set((lu.records||[]).map(r=>r.id));
       (ru.records||[]).forEach(rr=>{if(!localRecIds.has(rr.id))lu.records.push(rr);});
       lu.records.sort((a,b)=>new Date(a.startTime)-new Date(b.startTime));
+      // catsはローカル優先（なければリモートから）
+      if(!lu.cats&&ru.cats)lu.cats=ru.cats;
     }
   });
   // ローカルのユーザーを保持（リモートで削除されても消さない）
@@ -782,7 +795,7 @@ function showAddGroupForm(){
       sessionState='idle';selectedCat='';
       // 新グループの初期データを作成
       const uid='u'+Date.now();
-      const d={cats:DEFAULT_CATS.slice(),users:[{id:uid,name:'わたし',records:[]}]};
+      const d={users:[{id:uid,name:'わたし',cats:DEFAULT_CATS.slice(),records:[]}],deletedUsers:[]};
       localStorage.setItem(GROUP_DATA_K+'_'+id,JSON.stringify(d));
       setCurrentUserId(uid);
       renderAll();
@@ -800,11 +813,7 @@ function showAddUserForm(){
       const d=loadGroupData();
       if(d.users.find(u=>u.name===name)){showToast(`「${name}」は既に存在します`);return;}
       const id='u'+Date.now();
-      d.users.push({id,name,records:[]});
-      saveGroupData(d);
-      saveData();
-      renderAll();
-      showToast(`「${name}」を追加しました`);
+      d.users.push({id,name,cats:DEFAULT_CATS.slice(),records:[]});
     }
   });
 }
@@ -1355,9 +1364,10 @@ document.getElementById('import-file-input').addEventListener('change',e=>{
             const lu=local.users.find(l=>l.id===u.id);
             const lrIds=new Set(lu.records.map(r=>r.id));
             (u.records||[]).forEach(r=>{if(!lrIds.has(r.id))lu.records.push(r);});
+            // catsマージ（ユーザーごと）
+            if(u.cats){if(!lu.cats)lu.cats=[];u.cats.forEach(c=>{if(!lu.cats.includes(c))lu.cats.push(c);});}
           }else{local.users.push(u);}
         });
-        j.data.cats&&j.data.cats.forEach(c=>{if(!local.cats.includes(c))local.cats.push(c);});
         saveGroupData(local);saveData();renderAll();
         showToast('✅ インポートしました');
       } else {
@@ -1566,7 +1576,7 @@ document.getElementById('menu-delete-user-btn').addEventListener('click',()=>{
     deleted.deletedAt=new Date().toLocaleDateString('ja-JP');
     if(!d.deletedUsers)d.deletedUsers=[];
     d.deletedUsers.push(deleted);
-    if(!d.users.length){const uid='u'+Date.now();d.users=[{id:uid,name:'わたし',records:[]}];setCurrentUserId(uid);}
+    if(!d.users.length){const uid='u'+Date.now();d.users=[{id:uid,name:'わたし',cats:DEFAULT_CATS.slice(),records:[]}];setCurrentUserId(uid);}
     else{setCurrentUserId(d.users[0].id);}
     // ピンをクリア（次回起動時にウェルカム画面が出る）
     if(getPinnedUserId()===targetId)setPinnedUserId('');
@@ -1579,7 +1589,7 @@ document.getElementById('menu-delete-user-btn').addEventListener('click',()=>{
     const idx=d.users.findIndex(u=>u.id===targetId);
     if(idx===-1){showToast('❌ ユーザーが見つかりません');ov.remove();return;}
     d.users.splice(idx,1);
-    if(!d.users.length){const uid='u'+Date.now();d.users=[{id:uid,name:'わたし',records:[]}];setCurrentUserId(uid);}
+    if(!d.users.length){const uid='u'+Date.now();d.users=[{id:uid,name:'わたし',cats:DEFAULT_CATS.slice(),records:[]}];setCurrentUserId(uid);}
     else{setCurrentUserId(d.users[0].id);}
     // ピンをクリア
     if(getPinnedUserId()===targetId)setPinnedUserId('');
@@ -1756,7 +1766,8 @@ async function renderWelcomeStep2(group){
       }
       // ローカルとリモートをマージ
       const local=loadGroupData();
-      const merged={...remote,cats:remote.cats||local.cats};
+      const merged={...remote};
+      delete merged.cats; // グループ単位のcatsは使わない
       // deletedUsersマージ
       const mergedDeleted=[...(local.deletedUsers||[])];
       (remote.deletedUsers||[]).forEach(ru=>{if(!mergedDeleted.find(u=>u.id===ru.id))mergedDeleted.push(ru);});
@@ -1796,7 +1807,7 @@ document.getElementById('wc-group-add-btn').addEventListener('click',()=>{
   document.getElementById('wc-group-name').value='';
   setCurrentGroupId(id);
   const uid='u'+Date.now();
-  const d={cats:DEFAULT_CATS.slice(),users:[{id:uid,name:'わたし',records:[]}],deletedUsers:[]};
+  const d={users:[{id:uid,name:'わたし',cats:DEFAULT_CATS.slice(),records:[]}],deletedUsers:[]};
   localStorage.setItem(GROUP_DATA_K+'_'+id,JSON.stringify(d));
   setCurrentUserId(uid);
   renderWelcomeStep2({id,name,gasUrl:''});
@@ -1808,7 +1819,7 @@ document.getElementById('wc-add-user-btn').addEventListener('click',async()=>{
   const d=loadGroupData();
   if(d.users.find(u=>u.name===name)){showToast(`「${name}」は既に存在します`);return;}
   const id='u'+Date.now();
-  d.users.push({id,name,records:[]});
+  d.users.push({id,name,cats:DEFAULT_CATS.slice(),records:[]});
   saveGroupData(d);await saveData();
   input.value='';
   setPinnedUserId(id);setCurrentUserId(id);
