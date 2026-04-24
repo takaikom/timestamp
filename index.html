@@ -6,17 +6,17 @@
 <title>作業記録</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg:#F7F4EF; --surface:#FFF; --surface2:#F0EDE8;
-  --border:rgba(0,0,0,.10); --border2:rgba(0,0,0,.18);
-  --text:#1A1714; --text2:#6B665F; --text3:#9C9790;
-  --accent:#D85A30; --accent-light:#FAECE7; --accent-dark:#993C1D;
-  --green:#3B6D11; --green-light:#EAF3DE; --check:#639922;
-  --amber:#BA7517; --amber-light:#FAEEDA;
-  --blue:#185FA5; --blue-light:#E6F1FB;
-  --red:#A32D2D; --red-light:#FCEBEB; --red-mid:#E24B4A;
-  --teal:#0E7490; --teal-light:#E0F7FA;
-  --pause:#6B42C8; --pause-light:#EEEDFE;
+:root{
+  --bg:#F7F4EF;--surface:#FFF;--surface2:#F0EDE8;
+  --border:rgba(0,0,0,.10);--border2:rgba(0,0,0,.18);
+  --text:#1A1714;--text2:#6B665F;--text3:#9C9790;
+  --accent:#D85A30;--accent-light:#FAECE7;--accent-dark:#993C1D;
+  --green:#3B6D11;--green-light:#EAF3DE;--check:#639922;
+  --amber:#BA7517;--amber-light:#FAEEDA;
+  --blue:#185FA5;--blue-light:#E6F1FB;
+  --red:#A32D2D;--red-light:#FCEBEB;--red-mid:#E24B4A;
+  --teal:#0E7490;--teal-light:#E0F7FA;
+  --pause:#6B42C8;--pause-light:#EEEDFE;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
@@ -37,7 +37,23 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .menu-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;}
 .menu-btn:active{background:var(--surface2);}
 
-/* ── TABS ── */
+/* ── GROUP TABS (青) ── */
+.group-tabs{display:flex;align-items:center;overflow-x:auto;padding:0 12px;scrollbar-width:none;border-top:1px solid var(--border);background:var(--surface2);}
+.group-tabs::-webkit-scrollbar{display:none;}
+.group-tab{flex-shrink:0;padding:6px 12px;font-size:12px;font-weight:500;color:var(--text3);border:none;background:transparent;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s,border-color .15s;white-space:nowrap;font-family:'Noto Sans JP',sans-serif;-webkit-tap-highlight-color:transparent;}
+.group-tab.active{color:var(--blue);border-bottom-color:var(--blue);}
+.add-group-btn{flex-shrink:0;padding:4px 8px;font-size:11px;color:var(--text3);border:1px dashed var(--border2);border-radius:6px;background:transparent;cursor:pointer;margin-left:6px;white-space:nowrap;font-family:'Noto Sans JP',sans-serif;-webkit-tap-highlight-color:transparent;}
+.add-group-btn:active{border-color:var(--blue);color:var(--blue);}
+
+/* ── USER TABS (オレンジ) ── */
+.user-tabs{display:flex;align-items:center;overflow-x:auto;padding:0 12px;scrollbar-width:none;border-top:1px solid var(--border);background:var(--surface);}
+.user-tabs::-webkit-scrollbar{display:none;}
+.user-tab{flex-shrink:0;padding:8px 14px;font-size:13px;font-weight:500;color:var(--text3);border:none;background:transparent;cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-1px;transition:color .15s,border-color .15s;white-space:nowrap;font-family:'Noto Sans JP',sans-serif;-webkit-tap-highlight-color:transparent;}
+.user-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.add-user-btn{flex-shrink:0;width:26px;height:26px;border-radius:50%;border:1.5px dashed var(--border2);background:transparent;color:var(--text3);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;margin-left:6px;-webkit-tap-highlight-color:transparent;}
+.add-user-btn:active{border-color:var(--accent);color:var(--accent);}
+
+/* ── MAIN TABS ── */
 .main-tabs{display:flex;border-top:1px solid var(--border);background:var(--surface2);}
 .main-tab{flex:1;padding:8px 0;font-size:13px;font-weight:500;color:var(--text3);border:none;background:transparent;cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-1px;transition:color .15s,border-color .15s;-webkit-tap-highlight-color:transparent;font-family:'Noto Sans JP',sans-serif;}
 .main-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
@@ -61,48 +77,31 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .tab-body{padding:12px 16px 100px;max-width:480px;margin:0 auto;}
 .section-label{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin:16px 0 8px;}
 
-/* ══════════════════════════════════
-   CONTROL PANEL  (記録タブ上部)
-══════════════════════════════════ */
+/* ── CONTROL PANEL ── */
 .control-panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:4px;}
-
-/* カテゴリ選択 */
 .panel-label{font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;}
-.cat-picker{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px;}
+.cat-picker{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:8px;}
 .cat-pick-btn{padding:6px 14px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1.5px solid var(--border2);background:var(--surface2);color:var(--text2);-webkit-tap-highlight-color:transparent;transition:all .15s;font-family:'Noto Sans JP',sans-serif;white-space:nowrap;}
 .cat-pick-btn.selected{border-color:var(--accent);background:var(--accent-light);color:var(--accent-dark);}
 .cat-pick-btn:disabled{opacity:.4;cursor:not-allowed;}
-
-/* メモ入力 */
+.cat-free-input{width:100%;height:38px;border:1.5px solid var(--border2);border-radius:10px;padding:0 12px;font-family:'Noto Sans JP',sans-serif;font-size:13px;color:var(--text);background:var(--bg);outline:none;transition:border-color .2s;margin-top:2px;}
+.cat-free-input:focus{border-color:var(--accent);background:white;}
+.cat-free-input::placeholder{color:var(--text3);}
+.cat-free-input:disabled{opacity:.5;cursor:not-allowed;}
 .memo-input{width:100%;border:1.5px solid var(--border2);border-radius:10px;padding:9px 12px;font-family:'Noto Sans JP',sans-serif;font-size:13px;color:var(--text);background:var(--bg);outline:none;resize:none;line-height:1.5;transition:border-color .2s;height:60px;}
 .memo-input:focus{border-color:var(--accent);background:white;}
 .memo-input::placeholder{color:var(--text3);}
 .memo-input:disabled{opacity:.5;cursor:not-allowed;}
-.cat-free-input{width:100%;height:38px;border:1.5px solid var(--border2);border-radius:10px;padding:0 12px;font-family:'Noto Sans JP',sans-serif;font-size:13px;color:var(--text);background:var(--bg);outline:none;transition:border-color .2s;margin-top:8px;}
-.cat-free-input:focus{border-color:var(--accent);background:white;}
-.cat-free-input::placeholder{color:var(--text3);}
-.cat-free-input:disabled{opacity:.5;cursor:not-allowed;}
-
-/* ── ボタン行 ── */
 .btn-row{display:flex;align-items:center;gap:10px;margin-top:14px;}
-
-/* STARTボタン（大） */
 .start-btn{flex:1;height:54px;border-radius:14px;border:none;background:var(--accent);color:white;font-family:'Noto Sans JP',sans-serif;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.5px;-webkit-tap-highlight-color:transparent;transition:background .15s,transform .1s;}
 .start-btn:active{background:var(--accent-dark);transform:scale(.98);}
 .start-btn:disabled{background:var(--border2);color:var(--text3);cursor:not-allowed;transform:none;}
-
-/* STOPボタン（大） */
 .stop-btn{flex:1;height:54px;border-radius:14px;border:2px solid var(--red-mid);background:var(--red-light);color:var(--red-mid);font-family:'Noto Sans JP',sans-serif;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.5px;-webkit-tap-highlight-color:transparent;transition:all .15s,transform .1s;}
 .stop-btn:active{background:var(--red-mid);color:white;transform:scale(.98);}
-
-/* 一時停止ボタン（小） */
 .pause-btn{width:54px;height:54px;border-radius:14px;border:2px solid var(--pause);background:var(--pause-light);color:var(--pause);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;transition:all .15s,transform .1s;flex-shrink:0;}
 .pause-btn:active{background:var(--pause);color:white;transform:scale(.98);}
-/* 再開アイコン（一時停止中） */
 .pause-btn.paused{border-color:var(--teal);background:var(--teal-light);color:var(--teal);}
 .pause-btn.paused:active{background:var(--teal);color:white;}
-
-/* 現在のセッション表示 */
 .session-info{margin-top:12px;padding:10px 12px;background:var(--surface2);border-radius:10px;display:flex;align-items:center;justify-content:space-between;font-size:12px;}
 .session-info.hidden{display:none;}
 .session-cat{font-weight:700;color:var(--text2);}
@@ -172,6 +171,16 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .setup-step{display:flex;gap:10px;margin-bottom:10px;font-size:13px;color:var(--text2);line-height:1.6;}
 .setup-num{width:22px;height:22px;border-radius:50%;background:var(--accent-light);color:var(--accent-dark);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
 
+/* ── グループ設定カード ── */
+.group-manage-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;}
+.group-manage-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.group-manage-name{font-size:14px;font-weight:700;flex:1;}
+.group-manage-gas{font-size:11px;color:var(--blue);margin-bottom:6px;}
+.user-chip-list{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px;}
+.user-chip{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;border:1.5px solid var(--border2);background:var(--surface2);font-size:12px;color:var(--text2);}
+.user-chip.me{border-color:var(--accent);background:var(--accent-light);color:var(--accent-dark);}
+.user-chip-del{background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;line-height:1;padding:0;}
+
 /* ── BOTTOM SHEET ── */
 .sheet-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;align-items:flex-end;justify-content:center;}
 .sheet-overlay.open{display:flex;}
@@ -190,6 +199,7 @@ input[type="datetime-local"]:focus{border-color:var(--amber);}
 .dur-hint{text-align:right;font-size:12px;font-family:'DM Mono',monospace;color:var(--amber);min-height:18px;margin-bottom:10px;}
 .dur-hint.err{color:var(--red-mid);}
 textarea.text-input{height:66px;padding:10px 12px;resize:none;line-height:1.5;width:100%;}
+.edit-cat-picker{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
 
 /* ── MENU SHEET ── */
 .menu-item{display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:500;cursor:pointer;margin-bottom:8px;text-align:left;transition:background .15s;}
@@ -199,12 +209,20 @@ textarea.text-input{height:66px;padding:10px 12px;resize:none;line-height:1.5;wi
 .sheet-close-btn{width:100%;height:44px;border-radius:12px;border:none;background:var(--surface2);color:var(--text2);font-family:'Noto Sans JP',sans-serif;font-size:14px;cursor:pointer;margin-top:4px;}
 .sheet-divider{border:none;border-top:1px solid var(--border);margin:8px 0;}
 
-/* ── EDIT CAT PICKER in sheet ── */
-.edit-cat-picker{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+/* ── INLINE OVERLAY (グループ/ユーザー追加) ── */
+.inline-ov{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:300;display:flex;align-items:flex-end;justify-content:center;}
+.inline-sheet{background:var(--surface);border-radius:20px 20px 0 0;padding:24px 20px calc(24px + env(safe-area-inset-bottom));width:100%;max-width:480px;animation:slideUp .22s cubic-bezier(.22,1,.36,1);}
+.inline-title{font-size:15px;font-weight:700;margin-bottom:16px;}
+.inline-row{display:flex;gap:8px;margin-bottom:10px;}
+.inline-input{flex:1;height:44px;border:1.5px solid var(--accent);border-radius:12px;padding:0 14px;font-family:'Noto Sans JP',sans-serif;font-size:14px;color:var(--text);background:white;outline:none;}
+.inline-input.blue{border-color:var(--blue);}
+.inline-ok-btn{height:44px;padding:0 18px;border-radius:12px;border:none;background:var(--accent);color:white;font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:700;cursor:pointer;}
+.inline-ok-btn.blue{background:var(--blue);}
+.inline-cancel-btn{width:100%;height:40px;border-radius:12px;border:none;background:var(--surface2);color:var(--text2);font-family:'Noto Sans JP',sans-serif;font-size:14px;cursor:pointer;}
 
 /* ── EMPTY / TOAST ── */
 .empty-state{text-align:center;padding:40px 20px;color:var(--text3);font-size:14px;line-height:1.9;}
-.toast{position:fixed;bottom:calc(80px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:white;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;z-index:400;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;white-space:nowrap;max-width:90vw;}
+.toast{position:fixed;bottom:calc(80px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:white;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;z-index:500;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;white-space:nowrap;max-width:90vw;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 </style>
 </head>
@@ -222,6 +240,11 @@ textarea.text-input{height:66px;padding:10px 12px;resize:none;line-height:1.5;wi
     </div>
     <div class="header-sub" id="date-display"></div>
   </div>
+  <!-- グループタブ -->
+  <div class="group-tabs" id="group-tabs"></div>
+  <!-- ユーザータブ -->
+  <div class="user-tabs" id="user-tabs"></div>
+  <!-- メインタブ -->
   <div class="main-tabs">
     <button class="main-tab active" data-tab="record">記録</button>
     <button class="main-tab" data-tab="agg">集計</button>
@@ -238,51 +261,28 @@ textarea.text-input{height:66px;padding:10px 12px;resize:none;line-height:1.5;wi
 
 <!-- ══ TAB: 記録 ══ -->
 <div id="tab-record" class="tab-body">
-
-  <!-- ▼ コントロールパネル -->
   <div class="control-panel">
-
-    <!-- カテゴリ -->
     <div class="panel-label">カテゴリ</div>
     <div class="cat-picker" id="ctrl-cat-picker"></div>
     <input class="cat-free-input" id="ctrl-cat-free" type="text" placeholder="または直接入力…" maxlength="30" autocomplete="off">
-
-    <!-- メモ -->
     <div class="panel-label" style="margin-top:12px;">メモ（任意）</div>
     <textarea class="memo-input" id="ctrl-memo" placeholder="メモを入力…" rows="2"></textarea>
-
-    <!-- ボタン行 -->
     <div class="btn-row" id="btn-row-idle">
-      <!-- 待機中: START のみ -->
-      <button class="start-btn" id="start-btn">
-        <span style="font-size:18px;">▶</span> START
-      </button>
+      <button class="start-btn" id="start-btn"><span style="font-size:18px;">▶</span> START</button>
     </div>
-
     <div class="btn-row" id="btn-row-running" style="display:none;">
-      <!-- 記録中: STOP + 一時停止 -->
-      <button class="stop-btn" id="stop-btn">
-        <span style="font-size:18px;">⏹</span> STOP
-      </button>
+      <button class="stop-btn" id="stop-btn"><span style="font-size:18px;">⏹</span> STOP</button>
       <button class="pause-btn" id="pause-btn" title="一時停止">⏸</button>
     </div>
-
     <div class="btn-row" id="btn-row-paused" style="display:none;">
-      <!-- 一時停止中: STOP + 再開 -->
-      <button class="stop-btn" id="stop-paused-btn">
-        <span style="font-size:18px;">⏹</span> STOP
-      </button>
+      <button class="stop-btn" id="stop-paused-btn"><span style="font-size:18px;">⏹</span> STOP</button>
       <button class="pause-btn paused" id="resume-btn" title="再開">▶</button>
     </div>
-
-    <!-- セッション情報 -->
     <div class="session-info hidden" id="session-info">
       <div class="session-cat" id="session-cat-label">—</div>
       <div class="session-timer" id="session-timer">0:00</div>
     </div>
   </div>
-  <!-- ▲ コントロールパネル -->
-
   <div class="section-label">最近の記録</div>
   <div class="record-list" id="record-list"></div>
 </div>
@@ -302,72 +302,43 @@ textarea.text-input{height:66px;padding:10px 12px;resize:none;line-height:1.5;wi
 
 <!-- ══ TAB: 設定 ══ -->
 <div id="tab-settings" class="tab-body" style="display:none;">
+  <!-- グループ管理 -->
   <div class="settings-card">
-    <div class="settings-card-title">📂 カテゴリ管理</div>
+    <div class="settings-card-title">👥 グループ管理</div>
+    <div id="group-manage-list"></div>
+  </div>
+  <!-- カテゴリ管理 (グループ共通) -->
+  <div class="settings-card">
+    <div class="settings-card-title">📂 カテゴリ（グループ共通）</div>
     <div class="cat-chip-list" id="cat-chip-list"></div>
     <div class="add-row">
       <input class="text-input" id="new-cat-input" type="text" placeholder="新しいカテゴリ名" maxlength="20">
       <button class="primary-btn" id="add-cat-btn">追加</button>
     </div>
   </div>
+  <!-- GAS連携 -->
   <div class="settings-card">
-    <div class="settings-card-title">🔗 GAS連携（クラウド同期）</div>
-    <p style="font-size:12px;color:var(--text3);margin-bottom:12px;line-height:1.7;">Google Apps ScriptのURLを設定すると、記録をクラウドに自動保存できます。</p>
+    <div class="settings-card-title">🔗 GAS連携（グループ共有）</div>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:12px;line-height:1.7;">URLを設定すると、同じグループのメンバー全員の記録をクラウドで共有できます。</p>
     <input class="url-input" id="gas-url-input" type="url" placeholder="https://script.google.com/macros/s/...">
     <div style="display:flex;gap:8px;">
       <button class="blue-btn" id="gas-save-btn" style="flex:1;">URLを保存・接続</button>
       <button class="secondary-btn" id="gas-clear-btn">解除</button>
     </div>
-    <div class="sync-status-text" id="gas-status">未設定（ローカル保存のみ）</div>
+    <div class="sync-status-text" id="gas-status">未設定</div>
     <div style="margin-top:20px;">
-      <div class="settings-card-title" style="margin-bottom:10px;">📋 GASセットアップ手順（初回のみ）</div>
+      <div class="settings-card-title" style="margin-bottom:10px;">📋 GASセットアップ手順</div>
       <div class="setup-step"><div class="setup-num">1</div><div>Googleスプレッドシートを新規作成</div></div>
       <div class="setup-step"><div class="setup-num">2</div><div>「拡張機能」→「Apps Script」を開く</div></div>
-      <div class="setup-step"><div class="setup-num">3</div><div>下のコードを貼り付けて保存</div></div>
-      <div class="setup-step"><div class="setup-num">4</div><div>「デプロイ」→「新しいデプロイ」→ 種類「ウェブアプリ」→ アクセス「全員」→「デプロイ」してURLをコピー</div></div>
-      <details style="margin-top:10px;">
-        <summary style="font-size:12px;color:var(--blue);cursor:pointer;user-select:none;">GASコードを表示</summary>
-        <pre id="gas-code" style="margin-top:10px;font-size:11px;font-family:'DM Mono',monospace;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;overflow-x:auto;white-space:pre;color:var(--text2);line-height:1.5;">const SHEET_NAME = 'timestamp_data';
-
-function getSheet() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet = ss.getSheetByName(SHEET_NAME);
-  if (!sheet) {
-    sheet = ss.insertSheet(SHEET_NAME);
-    sheet.getRange('A1').setValue('{}');
-  }
-  return sheet;
-}
-
-function doGet(e) {
-  const sheet = getSheet();
-  const data = sheet.getRange('A1').getValue() || '{}';
-  return ContentService
-    .createTextOutput(data)
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-function doPost(e) {
-  try {
-    const payload = JSON.parse(e.postData.contents);
-    const sheet = getSheet();
-    sheet.getRange('A1').setValue(JSON.stringify(payload));
-    return ContentService
-      .createTextOutput(JSON.stringify({ ok: true }))
-      .setMimeType(ContentService.MimeType.JSON);
-  } catch (err) {
-    return ContentService
-      .createTextOutput(JSON.stringify({ ok: false, error: err.message }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-}</pre>
-        <button onclick="copyGasCode()" style="margin-top:8px;width:100%;height:36px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:'Noto Sans JP',sans-serif;font-size:13px;cursor:pointer;">📋 コードをコピー</button>
-      </details>
+      <div class="setup-step"><div class="setup-num">3</div><div>添付の <code style="font-size:11px;background:var(--surface2);padding:1px 5px;border-radius:4px;">GASコード.js</code> を貼り付けて保存</div></div>
+      <div class="setup-step"><div class="setup-num">4</div><div>「デプロイ」→「新しいデプロイ」→ 種類「ウェブアプリ」→ アクセス「全員」→ URLをコピーして上に貼り付け</div></div>
+      <div class="setup-step"><div class="setup-num">5</div><div>他のメンバーも同じURLを設定し、同じグループ名・自分の名前で参加する</div></div>
     </div>
   </div>
+  <!-- データ管理 -->
   <div class="settings-card">
     <div class="settings-card-title">🗑 データ管理</div>
-    <button class="danger-btn" id="clear-data-btn">全データを削除</button>
+    <button class="danger-btn" id="clear-data-btn">このユーザーのデータをすべて削除</button>
   </div>
 </div>
 
@@ -382,7 +353,7 @@ function doPost(e) {
     </button>
     <button class="menu-item" id="menu-export-btn">
       <div class="menu-icon" style="background:var(--accent-light);">⬇</div>
-      <div><div>エクスポート（CSV）</div><div class="menu-item-desc">Rawデータをダウンロード</div></div>
+      <div><div>エクスポート（CSV）</div><div class="menu-item-desc">現在のユーザーのRawデータ</div></div>
     </button>
     <button class="menu-item" id="menu-import-btn">
       <div class="menu-icon" style="background:var(--amber-light);">⬆</div>
@@ -391,7 +362,7 @@ function doPost(e) {
     <hr class="sheet-divider">
     <button class="menu-item" id="menu-backup-btn">
       <div class="menu-icon" style="background:var(--green-light);">💾</div>
-      <div><div>JSONバックアップ</div><div class="menu-item-desc">全データをJSONで保存</div></div>
+      <div><div>JSONバックアップ</div><div class="menu-item-desc">グループ全データをJSON保存</div></div>
     </button>
     <button class="sheet-close-btn" id="menu-close-btn">閉じる</button>
   </div>
@@ -423,75 +394,167 @@ function doPost(e) {
 <div class="toast" id="toast"></div>
 
 <script>
-// ═══════════════════════════════
-// STATE
-// ═══════════════════════════════
-const KEY_RECORDS = 'wt_records_v2';
-const KEY_CATS    = 'wt_cats_v2';
-const KEY_GAS_URL = 'wt_gas_url';
-const DEFAULT_CATS = ['勉強','読書','睡眠','仕事','遊び','その他'];
+// ════════════════════════════════════════
+// STORAGE KEYS
+// ════════════════════════════════════════
+const GROUPS_KEY      = 'wt_groups';
+const CURRENT_GROUP_K = 'wt_current_group';
+const CURRENT_USER_K  = 'wt_current_user';   // per-group: CURRENT_USER_K + '_' + groupId
+const GROUP_DATA_K    = 'wt_gdata';           // per-group: GROUP_DATA_K + '_' + groupId
+const DEFAULT_CATS    = ['勉強','読書','睡眠','仕事','遊び','その他'];
 
-let records = [];
-let cats = [];
-let aggMode = 'daily';
-let editingId = null;
+// ════════════════════════════════════════
+// GROUP STORAGE
+// ════════════════════════════════════════
+function loadGroups(){try{return JSON.parse(localStorage.getItem(GROUPS_KEY)||'[]');}catch{return[];}}
+function saveGroups(g){localStorage.setItem(GROUPS_KEY,JSON.stringify(g));}
+function getCurrentGroupId(){return localStorage.getItem(CURRENT_GROUP_K)||'';}
+function setCurrentGroupId(id){localStorage.setItem(CURRENT_GROUP_K,id);}
+function getCurrentGroup(){const id=getCurrentGroupId();return loadGroups().find(g=>g.id===id)||null;}
 
-// セッション状態: 'idle' | 'running' | 'paused'
-let sessionState = 'idle';
-// パネル選択中のカテゴリ
-let selectedCat = '';
-
-// ═══════════════════════════════
-// STORAGE / GAS
-// ═══════════════════════════════
-function loadData(){
-  try{records=JSON.parse(localStorage.getItem(KEY_RECORDS)||'[]');}catch{records=[];}
-  try{cats=JSON.parse(localStorage.getItem(KEY_CATS)||JSON.stringify(DEFAULT_CATS));}catch{cats=DEFAULT_CATS.slice();}
+// グループのGAS URL
+function getGroupGasUrl(){const g=getCurrentGroup();return g?g.gasUrl||'':'';}
+function setGroupGasUrl(url){
+  const gs=loadGroups(),id=getCurrentGroupId();
+  const g=gs.find(g=>g.id===id);if(g){g.gasUrl=url;saveGroups(gs);}
 }
-function saveRecords(){localStorage.setItem(KEY_RECORDS,JSON.stringify(records));}
-function saveCats()   {localStorage.setItem(KEY_CATS,JSON.stringify(cats));}
-function getGasUrl()  {return localStorage.getItem(KEY_GAS_URL)||'';}
-function setGasUrl(u) {localStorage.setItem(KEY_GAS_URL,u);}
 
+// ════════════════════════════════════════
+// GROUP DATA (users + cats)
+// グループデータ構造: { cats:[], users:[{id,name,records:[]}] }
+// ════════════════════════════════════════
+function groupDataKey(){return GROUP_DATA_K+'_'+getCurrentGroupId();}
+function loadGroupData(){
+  try{
+    const d=JSON.parse(localStorage.getItem(groupDataKey())||'null');
+    if(d&&d.users)return d;
+  }catch{}
+  // 初期化
+  const uid='u'+Date.now();
+  const d={cats:DEFAULT_CATS.slice(),users:[{id:uid,name:'わたし',records:[]}]};
+  localStorage.setItem(groupDataKey(),JSON.stringify(d));
+  setCurrentUserId(uid);
+  return d;
+}
+function saveGroupData(d){localStorage.setItem(groupDataKey(),JSON.stringify(d));}
+
+// ════════════════════════════════════════
+// USER
+// ════════════════════════════════════════
+function currentUserKey(){return CURRENT_USER_K+'_'+getCurrentGroupId();}
+function getCurrentUserId(){return localStorage.getItem(currentUserKey())||'';}
+function setCurrentUserId(id){localStorage.setItem(currentUserKey(),id);}
+function getCurrentUser(){
+  const d=loadGroupData();
+  const id=getCurrentUserId();
+  return d.users.find(u=>u.id===id)||d.users[0];
+}
+
+// ════════════════════════════════════════
+// CONVENIENT GETTERS
+// ════════════════════════════════════════
+function getRecords(){return getCurrentUser().records||[];}
+function getCats(){return loadGroupData().cats||DEFAULT_CATS.slice();}
+
+function mutateUserRecords(fn){
+  const d=loadGroupData();
+  const u=d.users.find(u=>u.id===getCurrentUserId())||d.users[0];
+  u.records=fn(u.records||[]);
+  saveGroupData(d);
+}
+function mutateCats(fn){
+  const d=loadGroupData();
+  d.cats=fn(d.cats||DEFAULT_CATS.slice());
+  saveGroupData(d);
+}
+
+// ════════════════════════════════════════
+// SYNC DOT / GAS
+// ════════════════════════════════════════
 function setSyncDot(state){
   const dot=document.getElementById('sync-dot');
   dot.className='sync-dot'+(state!=='off'?' '+state:'');
   dot.title={ok:'同期済み',err:'同期エラー',syncing:'同期中…',off:'ローカル保存のみ'}[state]||'';
 }
 async function remoteLoad(){
-  const url=getGasUrl();if(!url)return null;
-  try{const res=await fetch(url+(url.includes('?')?'&':'?')+'t='+Date.now(),{cache:'no-store'});const data=await res.json();return data&&Array.isArray(data.records)?data:null;}catch{return null;}
+  const url=getGroupGasUrl();if(!url)return null;
+  try{
+    const res=await fetch(url,{cache:'no-store'});
+    const d=await res.json();
+    return d&&d.users?d:null;
+  }catch{return null;}
 }
 async function remoteSave(){
-  const url=getGasUrl();if(!url)return false;
+  const url=getGroupGasUrl();if(!url)return false;
   setSyncDot('syncing');
-  try{await fetch(url,{method:'POST',body:JSON.stringify({records,cats})});setSyncDot('ok');return true;}
-  catch{setSyncDot('err');return false;}
+  try{
+    const d=loadGroupData();
+    const g=getCurrentGroup();
+    await fetch(url,{method:'POST',body:JSON.stringify({...d,groupName:g?g.name:''})});
+    setSyncDot('ok');return true;
+  }catch{setSyncDot('err');return false;}
 }
 async function syncFromRemote(silent=false){
-  const url=getGasUrl();if(!url){setSyncDot('off');return;}
+  const url=getGroupGasUrl();if(!url){setSyncDot('off');return;}
   if(!silent)setSyncDot('syncing');
   const remote=await remoteLoad();
-  if(!remote){if(!silent)setSyncDot('err');showToast('⚠ 同期に失敗しました');return;}
-  const localIds=new Set(records.map(r=>r.id));
-  remote.records.forEach(r=>{if(!localIds.has(r.id))records.push(r);});
-  records.sort((a,b)=>new Date(a.startTime)-new Date(b.startTime));
-  remote.cats.forEach(c=>{if(!cats.includes(c))cats.push(c);});
-  saveRecords();saveCats();
-  renderRecordList();renderAgg();renderCatChips();renderCtrlCatPicker();
-  if(!silent)setSyncDot('ok');
-  if(!silent)showToast('✅ 同期しました');
-}
-async function saveData(){
-  saveRecords();
-  if(getGasUrl())remoteSave().catch(()=>setSyncDot('err'));
+  if(!remote){if(!silent){setSyncDot('err');showToast('⚠ 同期に失敗しました');}return;}
+
+  const local=loadGroupData();
+  // ユーザーマージ：ローカル優先、リモートにしかいないユーザーを追加
+  const merged={...remote,cats:remote.cats||local.cats};
+  const localIds=new Set(local.users.map(u=>u.id));
+  remote.users.forEach(ru=>{
+    if(!localIds.has(ru.id)){merged.users=[...(merged.users||[]),ru];}
+    else{
+      // 同ユーザー：ローカルを維持しつつリモートにしかない記録を追加
+      const lu=local.users.find(u=>u.id===ru.id);
+      const localRecIds=new Set((lu.records||[]).map(r=>r.id));
+      (ru.records||[]).forEach(rr=>{if(!localRecIds.has(rr.id))lu.records.push(rr);});
+      lu.records.sort((a,b)=>new Date(a.startTime)-new Date(b.startTime));
+    }
+  });
+  // ローカルのユーザーを保持（リモートで削除されても消さない）
+  local.users.forEach(lu=>{
+    if(!(merged.users||[]).find(u=>u.id===lu.id))merged.users.push(lu);
+  });
+  // グループ名をリモートから更新
+  if(remote.groupName){
+    const gs=loadGroups(),id=getCurrentGroupId();
+    const g=gs.find(g=>g.id===id);
+    if(g&&g.gasUrl&&remote.groupName!==g.name){g.name=remote.groupName;saveGroups(gs);}
+  }
+  saveGroupData(merged);
+  if(!silent){setSyncDot('ok');showToast('✅ 同期しました');}
+  else setSyncDot('ok');
+  renderAll();
 }
 
-// ═══════════════════════════════
+async function saveData(){
+  // ローカルは既に mutate 系で保存済み
+  if(getGroupGasUrl())remoteSave().catch(()=>setSyncDot('err'));
+}
+
+// ════════════════════════════════════════
+// ENSURE DEFAULT GROUP
+// ════════════════════════════════════════
+function ensureDefaultGroup(){
+  let gs=loadGroups();
+  if(!gs.length){
+    const id='g_default';
+    gs=[{id,name:'マイグループ',gasUrl:''}];
+    saveGroups(gs);
+    setCurrentGroupId(id);
+  }else if(!getCurrentGroupId()){
+    setCurrentGroupId(gs[0].id);
+  }
+}
+
+// ════════════════════════════════════════
 // HELPERS
-// ═══════════════════════════════
+// ════════════════════════════════════════
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-const fmt=ms=>{if(ms==null||ms<0)return '--:--';const m=Math.floor(ms/60000);return`${Math.floor(m/60)}:${String(m%60).padStart(2,'0')}`;};
+const fmt=ms=>{if(ms==null||ms<0)return'--:--';const m=Math.floor(ms/60000);return`${Math.floor(m/60)}:${String(m%60).padStart(2,'0')}`;};
 const fdt=iso=>{if(!iso)return'';const d=new Date(iso);return`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;};
 const ymd=iso=>{const d=new Date(iso);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
 const ym =iso=>{const d=new Date(iso);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;};
@@ -499,25 +562,147 @@ const toLV=iso=>{if(!iso)return'';const d=new Date(iso),p=n=>String(n).padStart(
 function showToast(msg){const t=document.getElementById('toast');t.innerHTML=esc(msg);t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400);}
 function updateDateDisplay(){const d=new Date();const days=['日','月','火','水','木','金','土'];document.getElementById('date-display').textContent=`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${days[d.getDay()]}）`;}
 
-// ═══════════════════════════════
-// SESSION: running / paused record helpers
-// ═══════════════════════════════
+// ════════════════════════════════════════
+// SESSION STATE
+// ════════════════════════════════════════
+let sessionState='idle';
+let selectedCat='';
+let aggMode='daily';
+let editingId=null;
+
 function getActiveRecord(){
-  // 最後のレコードで endTime がないもの
-  if(!records.length)return null;
-  const last=records[records.length-1];
-  return!last.endTime?last:null;
+  const recs=getRecords();if(!recs.length)return null;
+  const last=recs[recs.length-1];return!last.endTime?last:null;
 }
 
-// ═══════════════════════════════
-// CONTROL PANEL UI
-// ═══════════════════════════════
+// ════════════════════════════════════════
+// GROUP TABS
+// ════════════════════════════════════════
+function renderGroupTabs(){
+  const gs=loadGroups();
+  const curId=getCurrentGroupId();
+  const tabs=document.getElementById('group-tabs');
+  tabs.innerHTML='';
+  gs.forEach(g=>{
+    const btn=document.createElement('button');
+    btn.className='group-tab'+(g.id===curId?' active':'');
+    btn.textContent=g.name+(g.gasUrl?'🔗':'');
+    btn.addEventListener('click',async()=>{
+      if(g.id===getCurrentGroupId())return;
+      setCurrentGroupId(g.id);
+      sessionState='idle';selectedCat='';
+      if(g.gasUrl){setSyncDot('syncing');await syncFromRemote(true);}
+      else setSyncDot('off');
+      // ピン済みユーザーを使う
+      const cu=getCurrentUserId();
+      const d=loadGroupData();
+      if(!cu||!d.users.find(u=>u.id===cu))setCurrentUserId(d.users[0]?.id||'');
+      renderAll();
+    });
+    tabs.appendChild(btn);
+  });
+  const addBtn=document.createElement('button');
+  addBtn.className='add-group-btn';
+  addBtn.textContent=gs.length===0?'＋グループを作成':'＋グループ';
+  addBtn.addEventListener('click',showAddGroupForm);
+  tabs.appendChild(addBtn);
+}
+
+// ════════════════════════════════════════
+// USER TABS
+// ════════════════════════════════════════
+function renderUserTabs(){
+  const d=loadGroupData();
+  const curUid=getCurrentUserId();
+  const tabs=document.getElementById('user-tabs');
+  tabs.innerHTML='';
+  d.users.forEach(u=>{
+    const btn=document.createElement('button');
+    btn.className='user-tab'+(u.id===curUid?' active':'');
+    btn.textContent=u.name;
+    btn.addEventListener('click',()=>{
+      if(u.id===getCurrentUserId())return;
+      // 前のユーザーでセッションが走っていたら警告なく保持（記録は残る）
+      sessionState='idle';selectedCat='';
+      setCurrentUserId(u.id);
+      renderAll();
+    });
+    tabs.appendChild(btn);
+  });
+  const addBtn=document.createElement('button');
+  addBtn.className='add-user-btn';addBtn.title='メンバーを追加';addBtn.textContent='+';
+  addBtn.addEventListener('click',showAddUserForm);
+  tabs.appendChild(addBtn);
+}
+
+// ════════════════════════════════════════
+// INLINE FORMS
+// ════════════════════════════════════════
+function showInlineForm({title,placeholder,accentClass,onAdd}){
+  const existing=document.getElementById('_inline_ov');if(existing)existing.remove();
+  const ov=document.createElement('div');
+  ov.id='_inline_ov';ov.className='inline-ov';
+  ov.innerHTML=`<div class="inline-sheet"><div class="inline-title">${esc(title)}</div><div class="inline-row"><input id="_ii" class="inline-input${accentClass?' '+accentClass:''}" type="text" placeholder="${esc(placeholder)}" maxlength="20"></div><button id="_io" class="inline-ok-btn${accentClass?' '+accentClass:''}" style="width:100%;margin-bottom:8px;">追加</button><button id="_ic" class="inline-cancel-btn">キャンセル</button></div>`;
+  document.body.appendChild(ov);
+  const inp=ov.querySelector('#_ii');
+  setTimeout(()=>inp.focus(),50);
+  const doAdd=()=>{const v=inp.value.trim();if(!v)return;onAdd(v);ov.remove();};
+  ov.querySelector('#_io').addEventListener('click',doAdd);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')doAdd();if(e.key==='Escape')ov.remove();});
+  ov.querySelector('#_ic').addEventListener('click',()=>ov.remove());
+  ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
+}
+
+function showAddGroupForm(){
+  showInlineForm({
+    title:'グループを追加',
+    placeholder:'グループ名（例：田中家）',
+    accentClass:'blue',
+    onAdd(name){
+      const gs=loadGroups();
+      const id='g'+Date.now();
+      gs.push({id,name,gasUrl:''});
+      saveGroups(gs);
+      setCurrentGroupId(id);
+      sessionState='idle';selectedCat='';
+      // 新グループの初期データを作成
+      const uid='u'+Date.now();
+      const d={cats:DEFAULT_CATS.slice(),users:[{id:uid,name:'わたし',records:[]}]};
+      localStorage.setItem(GROUP_DATA_K+'_'+id,JSON.stringify(d));
+      setCurrentUserId(uid);
+      renderAll();
+      showToast(`グループ「${name}」を作成しました`);
+    }
+  });
+}
+
+function showAddUserForm(){
+  showInlineForm({
+    title:'メンバーを追加',
+    placeholder:'名前を入力…',
+    accentClass:'',
+    onAdd(name){
+      const d=loadGroupData();
+      if(d.users.find(u=>u.name===name)){showToast(`「${name}」は既に存在します`);return;}
+      const id='u'+Date.now();
+      d.users.push({id,name,records:[]});
+      saveGroupData(d);
+      saveData();
+      renderAll();
+      showToast(`「${name}」を追加しました`);
+    }
+  });
+}
+
+// ════════════════════════════════════════
+// CONTROL PANEL
+// ════════════════════════════════════════
 function renderCtrlCatPicker(){
   const c=document.getElementById('ctrl-cat-picker');
   const freeEl=document.getElementById('ctrl-cat-free');
   const disabled=sessionState!=='idle';
-  // フリー入力に値があるときはチップ選択を消す
   const hasFree=freeEl&&freeEl.value.trim()!=='';
+  const cats=getCats();
   c.innerHTML=cats.map(cat=>`<button class="cat-pick-btn${(!hasFree&&selectedCat===cat)?' selected':''}"${disabled?' disabled':''} data-cat="${esc(cat)}">${esc(cat)}</button>`).join('');
   if(!disabled){
     c.querySelectorAll('.cat-pick-btn').forEach(btn=>{
@@ -527,36 +712,25 @@ function renderCtrlCatPicker(){
         c.querySelectorAll('.cat-pick-btn').forEach(b=>b.classList.toggle('selected',b.dataset.cat===selectedCat));
       });
     });
-    // フリー入力 → チップ選択を解除（renderごとに新しいinputが生成されるので直接バインド）
     if(freeEl){
       freeEl.oninput=()=>{
-        if(freeEl.value.trim()){
-          selectedCat='';
-          c.querySelectorAll('.cat-pick-btn').forEach(b=>b.classList.remove('selected'));
-        }
+        if(freeEl.value.trim()){selectedCat='';c.querySelectorAll('.cat-pick-btn').forEach(b=>b.classList.remove('selected'));}
       };
     }
   }
 }
 
 function updateControlPanel(){
-  // ボタン行の表示切替
-  document.getElementById('btn-row-idle').style.display   = sessionState==='idle'?'':'none';
-  document.getElementById('btn-row-running').style.display= sessionState==='running'?'':'none';
-  document.getElementById('btn-row-paused').style.display = sessionState==='paused'?'':'none';
-
-  // カテゴリ・メモの disabled
+  document.getElementById('btn-row-idle').style.display   =sessionState==='idle'?'':'none';
+  document.getElementById('btn-row-running').style.display=sessionState==='running'?'':'none';
+  document.getElementById('btn-row-paused').style.display =sessionState==='paused'?'':'none';
   const isActive=sessionState!=='idle';
   document.getElementById('ctrl-memo').disabled=isActive;
   document.getElementById('ctrl-cat-free').disabled=isActive;
-  if(isActive) document.getElementById('ctrl-cat-free').value='';
-  document.getElementById('ctrl-cat-picker').querySelectorAll('.cat-pick-btn').forEach(b=>b.disabled=isActive);
-
-  // セッション情報行
+  if(isActive)document.getElementById('ctrl-cat-free').value='';
   const si=document.getElementById('session-info');
-  if(sessionState==='idle'){
-    si.classList.add('hidden');
-  } else {
+  if(sessionState==='idle'){si.classList.add('hidden');}
+  else{
     si.classList.remove('hidden');
     si.classList.toggle('paused-info',sessionState==='paused');
     const active=getActiveRecord();
@@ -565,8 +739,6 @@ function updateControlPanel(){
     document.getElementById('session-cat-label').innerHTML=`<span>${esc(cat||'—')}</span>${sessionState==='paused'?'　⏸ 一時停止中':''}`;
     document.getElementById('session-timer').textContent=fmt(elapsed);
   }
-
-  // バナー
   updateRunningBanner();
   renderCtrlCatPicker();
 }
@@ -583,86 +755,65 @@ function updateRunningBanner(){
   document.getElementById('running-elapsed').textContent=fmt(elapsed);
 }
 
-// ═══════════════════════════════
-// START
-// ═══════════════════════════════
+// ════════════════════════════════════════
+// START / STOP / PAUSE / RESUME
+// ════════════════════════════════════════
 document.getElementById('start-btn').addEventListener('click',()=>{
   const freeVal=document.getElementById('ctrl-cat-free').value.trim();
   const cat=freeVal||selectedCat;
   if(!cat){showToast('⚠ カテゴリを選択または入力してください');return;}
   const ts=new Date().toISOString();
   const memo=document.getElementById('ctrl-memo').value.trim();
-  records.push({id:Date.now(),startTime:ts,endTime:null,duration:null,category:cat,memo});
+  mutateUserRecords(recs=>{recs.push({id:Date.now(),startTime:ts,endTime:null,duration:null,category:cat,memo});return recs;});
   selectedCat=cat;
   sessionState='running';
   saveData();
-  renderRecordList();
-  updateControlPanel();
+  renderRecordList();updateControlPanel();
   showToast('▶ 記録を開始しました');
 });
 
-// ═══════════════════════════════
-// STOP
-// ═══════════════════════════════
 function doStop(){
   const ts=new Date().toISOString();
   const active=getActiveRecord();
   if(active){
-    const idx=records.findIndex(r=>r.id===active.id);
-    records[idx]={...active,endTime:ts,duration:new Date(ts)-new Date(active.startTime)};
+    mutateUserRecords(recs=>recs.map(r=>r.id===active.id?{...r,endTime:ts,duration:new Date(ts)-new Date(r.startTime)}:r));
   }
   sessionState='idle';
-  saveData();
-  renderRecordList();
-  updateControlPanel();
+  saveData();renderRecordList();updateControlPanel();
   showToast('⏹ 記録を終了しました');
 }
 document.getElementById('stop-btn').addEventListener('click',doStop);
 document.getElementById('stop-paused-btn').addEventListener('click',doStop);
 
-// ═══════════════════════════════
-// PAUSE
-// ═══════════════════════════════
 document.getElementById('pause-btn').addEventListener('click',()=>{
   const ts=new Date().toISOString();
-  const active=getActiveRecord();
-  if(!active)return;
-  // アクティブ記録を終了
-  const idx=records.findIndex(r=>r.id===active.id);
-  records[idx]={...active,endTime:ts,duration:new Date(ts)-new Date(active.startTime)};
+  const active=getActiveRecord();if(!active)return;
+  mutateUserRecords(recs=>recs.map(r=>r.id===active.id?{...r,endTime:ts,duration:new Date(ts)-new Date(r.startTime)}:r));
   sessionState='paused';
-  saveData();
-  renderRecordList();
-  updateControlPanel();
+  saveData();renderRecordList();updateControlPanel();
   showToast('⏸ 一時停止しました');
 });
 
-// ═══════════════════════════════
-// RESUME
-// ═══════════════════════════════
 document.getElementById('resume-btn').addEventListener('click',()=>{
-  // 直前の一時停止レコードと同じ category / memo で新規開始
-  // 最後の完了レコードから引き継ぐ
-  const last=records.length?records[records.length-1]:null;
+  const recs=getRecords();
+  const last=recs.length?recs[recs.length-1]:null;
   const cat=last?last.category:selectedCat;
   const memo=last?last.memo:'';
   const ts=new Date().toISOString();
-  records.push({id:Date.now(),startTime:ts,endTime:null,duration:null,category:cat,memo,resumed:true});
+  mutateUserRecords(r=>{r.push({id:Date.now(),startTime:ts,endTime:null,duration:null,category:cat,memo,resumed:true});return r;});
   sessionState='running';
-  saveData();
-  renderRecordList();
-  updateControlPanel();
+  saveData();renderRecordList();updateControlPanel();
   showToast('▶ 再開しました');
 });
 
-// ═══════════════════════════════
+// ════════════════════════════════════════
 // RECORD LIST
-// ═══════════════════════════════
+// ════════════════════════════════════════
 function renderRecordList(){
   const list=document.getElementById('record-list');
-  const reversed=[...records].reverse().slice(0,30);
-  if(!reversed.length){list.innerHTML='<div class="empty-state">まだ記録がありません<br>カテゴリを選んで ▶ START しよう</div>';return;}
-  list.innerHTML=reversed.map(r=>{
+  const recs=[...getRecords()].reverse().slice(0,30);
+  if(!recs.length){list.innerHTML='<div class="empty-state">まだ記録がありません<br>カテゴリを選んで ▶ START しよう</div>';return;}
+  list.innerHTML=recs.map(r=>{
     const isActive=!r.endTime;
     const elapsed=isActive?Date.now()-new Date(r.startTime).getTime():null;
     const dur=r.duration?fmt(r.duration):(isActive?fmt(elapsed):'--:--');
@@ -689,32 +840,30 @@ function renderRecordList(){
 
 function deleteRecord(id){
   if(!confirm('この記録を削除しますか？'))return;
-  records=records.filter(r=>r.id!==id);
-  // アクティブ記録を削除した場合はセッションをリセット
+  mutateUserRecords(recs=>recs.filter(r=>r.id!==id));
   const active=getActiveRecord();
   if(!active&&sessionState!=='idle'){sessionState='idle';updateControlPanel();}
-  saveData();
-  renderRecordList();renderAgg();
+  saveData();renderRecordList();renderAgg();
   showToast('🗑 削除しました');
 }
 
-// ═══════════════════════════════
+// ════════════════════════════════════════
 // EDIT SHEET
-// ═══════════════════════════════
+// ════════════════════════════════════════
 function openEdit(id){
-  const r=records.find(r=>r.id===id);if(!r)return;
+  const r=getRecords().find(r=>r.id===id);if(!r)return;
   editingId=id;
   document.getElementById('edit-start').value=toLV(r.startTime);
   document.getElementById('edit-end').value=r.endTime?toLV(r.endTime):'';
   document.getElementById('edit-cat-custom').value='';
   document.getElementById('edit-memo').value=r.memo||'';
-  // build cat picker
+  const cats=getCats();
   const cp=document.getElementById('edit-cat-picker');
   cp.innerHTML=cats.map(cat=>`<button class="cat-pick-btn${r.category===cat?' selected':''}" data-cat="${esc(cat)}">${esc(cat)}</button>`).join('');
   cp.querySelectorAll('.cat-pick-btn').forEach(btn=>{
     btn.addEventListener('click',()=>{cp.querySelectorAll('.cat-pick-btn').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');document.getElementById('edit-cat-custom').value='';});
   });
-  document.getElementById('edit-cat-custom').addEventListener('input',()=>cp.querySelectorAll('.cat-pick-btn').forEach(b=>b.classList.remove('selected')));
+  document.getElementById('edit-cat-custom').oninput=()=>cp.querySelectorAll('.cat-pick-btn').forEach(b=>b.classList.remove('selected'));
   updateEditDurHint();
   document.getElementById('edit-sheet').classList.add('open');
 }
@@ -733,12 +882,12 @@ document.getElementById('edit-save-btn').addEventListener('click',()=>{
   const sel=document.getElementById('edit-cat-picker').querySelector('.cat-pick-btn.selected');
   const cat=document.getElementById('edit-cat-custom').value.trim()||(sel?sel.dataset.cat:'');
   const memo=document.getElementById('edit-memo').value.trim();
-  records=records.map(r=>{
+  mutateUserRecords(recs=>recs.map(r=>{
     if(r.id!==editingId)return r;
     const ns=s?new Date(s).toISOString():r.startTime,ne=e?new Date(e).toISOString():r.endTime;
     const dur=ns&&ne?new Date(ne)-new Date(ns):r.duration;
     return{...r,category:cat,memo,startTime:ns,endTime:ne,duration:dur>0?dur:r.duration};
-  });
+  }));
   saveData();renderRecordList();renderAgg();updateControlPanel();
   document.getElementById('edit-sheet').classList.remove('open');
   showToast('✅ 保存しました');
@@ -746,12 +895,12 @@ document.getElementById('edit-save-btn').addEventListener('click',()=>{
 document.getElementById('edit-cancel-btn').addEventListener('click',()=>document.getElementById('edit-sheet').classList.remove('open'));
 document.getElementById('edit-sheet').addEventListener('click',e=>{if(e.target.id==='edit-sheet')document.getElementById('edit-sheet').classList.remove('open');});
 
-// ═══════════════════════════════
+// ════════════════════════════════════════
 // AGGREGATE
-// ═══════════════════════════════
+// ════════════════════════════════════════
 function buildAgg(mode){
   const g={};
-  records.filter(r=>r.endTime&&r.category).forEach(r=>{
+  getRecords().filter(r=>r.endTime&&r.category).forEach(r=>{
     const k=mode==='daily'?ymd(r.startTime):ym(r.startTime);
     if(!g[k])g[k]={};
     g[k][r.category]=(g[k][r.category]||0)+(r.duration||0);
@@ -765,11 +914,7 @@ function renderAgg(){
   if(!entries.length){list.innerHTML='<div class="empty-state">集計データがありません</div>';return;}
   list.innerHTML=entries.map(([period,cm])=>{
     const total=Object.values(cm).reduce((a,b)=>a+b,0);
-    const rows=Object.entries(cm).map(([cat,ms])=>`
-      <div class="agg-cat-row">
-        <div class="agg-cat-header"><span class="agg-cat-name">${esc(cat)}</span><span class="agg-cat-dur">${fmt(ms)}</span></div>
-        <div class="bar-track"><div class="bar-fill" style="width:${total>0?(ms/total*100).toFixed(1):0}%"></div></div>
-      </div>`).join('');
+    const rows=Object.entries(cm).map(([cat,ms])=>`<div class="agg-cat-row"><div class="agg-cat-header"><span class="agg-cat-name">${esc(cat)}</span><span class="agg-cat-dur">${fmt(ms)}</span></div><div class="bar-track"><div class="bar-fill" style="width:${total>0?(ms/total*100).toFixed(1):0}%"></div></div></div>`).join('');
     return`<div class="agg-period-card"><div class="agg-period-row"><span class="agg-period-label">${esc(period)}</span><span class="agg-total-label">${fmt(total)}</span></div>${rows}</div>`;
   }).join('');
 }
@@ -781,64 +926,118 @@ document.querySelectorAll('.toggle-btn').forEach(btn=>{
   });
 });
 
-// ═══════════════════════════════
+// ════════════════════════════════════════
 // SETTINGS
-// ═══════════════════════════════
+// ════════════════════════════════════════
 function renderCatChips(){
   const list=document.getElementById('cat-chip-list');
+  const cats=getCats();
   list.innerHTML=cats.map(c=>`<div class="cat-chip"><span>${esc(c)}</span><button class="cat-chip-del" data-cat="${esc(c)}">✕</button></div>`).join('');
   list.querySelectorAll('.cat-chip-del').forEach(btn=>{
-    btn.addEventListener('click',()=>{cats=cats.filter(c=>c!==btn.dataset.cat);saveCats();renderCatChips();renderCtrlCatPicker();showToast('カテゴリを削除しました');});
+    btn.addEventListener('click',()=>{
+      mutateCats(cs=>cs.filter(c=>c!==btn.dataset.cat));
+      saveData();renderCatChips();renderCtrlCatPicker();
+      showToast('カテゴリを削除しました');
+    });
   });
 }
 document.getElementById('add-cat-btn').addEventListener('click',()=>{
   const v=document.getElementById('new-cat-input').value.trim();
-  if(!v)return;if(cats.includes(v)){showToast('⚠ 同じ名前が既にあります');return;}
-  cats.push(v);saveCats();document.getElementById('new-cat-input').value='';
+  if(!v)return;
+  const cats=getCats();if(cats.includes(v)){showToast('⚠ 同じ名前が既にあります');return;}
+  mutateCats(cs=>{cs.push(v);return cs;});
+  saveData();document.getElementById('new-cat-input').value='';
   renderCatChips();renderCtrlCatPicker();showToast('✅ カテゴリを追加しました');
 });
 document.getElementById('new-cat-input').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('add-cat-btn').click();});
-document.getElementById('clear-data-btn').addEventListener('click',()=>{
-  if(!confirm('全データを削除しますか？この操作は元に戻せません。'))return;
-  records=[];sessionState='idle';saveRecords();
-  renderRecordList();renderAgg();updateControlPanel();
-  showToast('🗑 全データを削除しました');
-});
 
-// GAS
+// グループ管理
+function renderGroupManage(){
+  const gs=loadGroups();
+  const curId=getCurrentGroupId();
+  const d=loadGroupData();
+  const curUid=getCurrentUserId();
+  const list=document.getElementById('group-manage-list');
+  list.innerHTML=gs.map(g=>{
+    const isActive=g.id===curId;
+    const gd=isActive?d:null; // 他グループのデータは読まない（重いため）
+    const userCount=isActive?d.users.length:'?';
+    return`<div class="group-manage-card${isActive?'':' '}">
+      <div class="group-manage-row">
+        <div class="group-manage-name">${esc(g.name)}${isActive?'<span style="font-size:10px;color:var(--accent);margin-left:6px;">現在</span>':''}</div>
+        <button class="act-btn del" data-gid="${esc(g.id)}" title="グループを削除">✕</button>
+      </div>
+      <div class="group-manage-gas">${g.gasUrl?'🔗 GAS連携あり':'💾 ローカルのみ'}</div>
+      ${isActive?`<div style="font-size:12px;color:var(--text3);margin-bottom:8px;">メンバー ${d.users.length}人</div>
+      <div class="user-chip-list">${d.users.map(u=>`<div class="user-chip${u.id===curUid?' me':''}"><span>${esc(u.name)}${u.id===curUid?' (わたし)':''}</span><button class="user-chip-del" data-uid="${esc(u.id)}" title="${esc(u.name)}を削除">✕</button></div>`).join('')}</div>`:''}
+    </div>`;
+  }).join('');
+  // グループ削除
+  list.querySelectorAll('.act-btn.del[data-gid]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const gid=btn.dataset.gid;
+      const gs2=loadGroups();if(gs2.length<=1){showToast('⚠ グループは最低1つ必要です');return;}
+      if(!confirm('このグループを削除しますか？記録データも失われます。'))return;
+      const newGs=gs2.filter(g=>g.id!==gid);saveGroups(newGs);
+      localStorage.removeItem(GROUP_DATA_K+'_'+gid);
+      if(getCurrentGroupId()===gid){setCurrentGroupId(newGs[0].id);sessionState='idle';selectedCat='';}
+      renderAll();showToast('グループを削除しました');
+    });
+  });
+  // ユーザー削除
+  list.querySelectorAll('.user-chip-del[data-uid]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const uid=btn.dataset.uid;
+      const d2=loadGroupData();if(d2.users.length<=1){showToast('⚠ メンバーは最低1人必要です');return;}
+      if(!confirm('このメンバーを削除しますか？記録も失われます。'))return;
+      d2.users=d2.users.filter(u=>u.id!==uid);
+      if(getCurrentUserId()===uid){setCurrentUserId(d2.users[0].id);sessionState='idle';selectedCat='';}
+      saveGroupData(d2);saveData();
+      renderAll();showToast('メンバーを削除しました');
+    });
+  });
+}
+
+// GAS設定
 function refreshGasStatus(){
-  const url=getGasUrl();
+  const url=getGroupGasUrl();
   document.getElementById('gas-url-input').value=url;
   const el=document.getElementById('gas-status');
-  if(url){el.textContent='🔗 GAS連携が設定されています';el.className='sync-status-text ok';setSyncDot('ok');}
+  if(url){el.textContent='🔗 GAS連携が設定されています（このグループ）';el.className='sync-status-text ok';setSyncDot('ok');}
   else{el.textContent='未設定（ローカル保存のみ）';el.className='sync-status-text';setSyncDot('off');}
 }
 document.getElementById('gas-save-btn').addEventListener('click',async()=>{
   const url=document.getElementById('gas-url-input').value.trim();
   if(!url){showToast('⚠ URLを入力してください');return;}
-  setGasUrl(url);refreshGasStatus();showToast('🔗 接続中…');
-  const ok=await remoteSave();
-  showToast(ok?'✅ GAS連携を設定しました':'⚠ 接続に失敗しました。URLを確認してください');
+  setGroupGasUrl(url);refreshGasStatus();renderGroupTabs();
+  showToast('🔗 接続中…');const ok=await remoteSave();
+  showToast(ok?'✅ GAS連携を設定しました':'⚠ 接続に失敗しました');
 });
 document.getElementById('gas-clear-btn').addEventListener('click',()=>{
   if(!confirm('GAS連携を解除しますか？'))return;
-  setGasUrl('');refreshGasStatus();showToast('GAS連携を解除しました');
+  setGroupGasUrl('');refreshGasStatus();renderGroupTabs();
+  showToast('GAS連携を解除しました');
 });
-function copyGasCode(){
-  const code=document.getElementById('gas-code').textContent;
-  navigator.clipboard.writeText(code).then(()=>showToast('📋 コードをコピーしました')).catch(()=>showToast('コピーできませんでした'));
-}
 
-// ═══════════════════════════════
-// EXPORT / IMPORT / BACKUP
-// ═══════════════════════════════
+document.getElementById('clear-data-btn').addEventListener('click',()=>{
+  if(!confirm('このユーザーの記録をすべて削除しますか？'))return;
+  mutateUserRecords(()=>[]);
+  sessionState='idle';selectedCat='';
+  saveData();renderAll();showToast('🗑 削除しました');
+});
+
+// ════════════════════════════════════════
+// EXPORT / BACKUP / IMPORT
+// ════════════════════════════════════════
 function exportCSV(type){
-  const done=records.filter(r=>r.endTime&&r.category);
+  const recs=getRecords();
+  const done=recs.filter(r=>r.endTime&&r.category);
   const allCats=[...new Set(done.map(r=>r.category))];
   let csv='';
   if(type==='raw'){
-    csv='ID,開始時刻,終了時刻,時間(分),カテゴリ,メモ,再開\n';
-    records.forEach(r=>{csv+=`${r.id},"${r.startTime}","${r.endTime||''}",${r.duration?Math.floor(r.duration/60000):''},"${r.category||''}","${r.memo||''}","${r.resumed?'再開':''}"\n`;});
+    csv='ID,ユーザー,開始時刻,終了時刻,時間(分),カテゴリ,メモ,再開\n';
+    const u=getCurrentUser();
+    recs.forEach(r=>{csv+=`${r.id},"${esc(u.name)}","${r.startTime}","${r.endTime||''}",${r.duration?Math.floor(r.duration/60000):''},"${r.category||''}","${r.memo||''}","${r.resumed?'再開':''}"\n`;});
   } else {
     const data=buildAgg(type);
     csv=`期間,${allCats.join(',')},合計\n`;
@@ -849,58 +1048,71 @@ function exportCSV(type){
   }
   const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
   const url=URL.createObjectURL(blob);const a=document.createElement('a');
-  a.href=url;a.download=`work_${type}_${new Date().toISOString().slice(0,10)}.csv`;a.click();URL.revokeObjectURL(url);
+  a.href=url;a.download=`wt_${type}_${new Date().toISOString().slice(0,10)}.csv`;a.click();URL.revokeObjectURL(url);
 }
 document.getElementById('export-raw').addEventListener('click',()=>exportCSV('raw'));
 document.getElementById('export-daily').addEventListener('click',()=>exportCSV('daily'));
 document.getElementById('export-monthly').addEventListener('click',()=>exportCSV('monthly'));
 
 function backupJSON(){
-  const blob=new Blob([JSON.stringify({records,cats},null,2)],{type:'application/json'});
+  const g=getCurrentGroup();
+  const d=loadGroupData();
+  const blob=new Blob([JSON.stringify({group:g,data:d},null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);const a=document.createElement('a');
-  a.href=url;a.download=`work_backup_${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(url);
+  a.href=url;a.download=`wt_backup_${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(url);
 }
+
 document.getElementById('import-file-input').addEventListener('change',e=>{
   const file=e.target.files[0];if(!file)return;
   const reader=new FileReader();
   reader.onload=ev=>{
     try{
-      const data=JSON.parse(ev.target.result);
-      if(!Array.isArray(data.records))throw new Error('invalid');
-      if(!confirm(`${data.records.length}件の記録をインポートしますか？`))return;
-      const ids=new Set(records.map(r=>r.id));
-      data.records.forEach(r=>{if(!ids.has(r.id))records.push(r);});
-      records.sort((a,b)=>new Date(a.startTime)-new Date(b.startTime));
-      if(data.cats)data.cats.forEach(c=>{if(!cats.includes(c))cats.push(c);});
-      saveData();saveCats();renderRecordList();renderAgg();renderCatChips();renderCtrlCatPicker();
-      showToast(`✅ ${data.records.length}件をインポートしました`);
+      const j=JSON.parse(ev.target.result);
+      // 新形式: {group, data} または旧形式: {records, cats}
+      if(j.data&&j.data.users){
+        if(!confirm(`グループ「${j.group?.name||'不明'}」のデータをインポートしますか？現在のグループにマージされます。`))return;
+        const local=loadGroupData();
+        const localIds=new Set(local.users.map(u=>u.id));
+        j.data.users.forEach(u=>{
+          if(localIds.has(u.id)){
+            const lu=local.users.find(l=>l.id===u.id);
+            const lrIds=new Set(lu.records.map(r=>r.id));
+            (u.records||[]).forEach(r=>{if(!lrIds.has(r.id))lu.records.push(r);});
+          }else{local.users.push(u);}
+        });
+        j.data.cats&&j.data.cats.forEach(c=>{if(!local.cats.includes(c))local.cats.push(c);});
+        saveGroupData(local);saveData();renderAll();
+        showToast('✅ インポートしました');
+      } else {
+        showToast('⚠ 対応していない形式です');
+      }
     }catch{showToast('⚠ 読み込みに失敗しました');}
     e.target.value='';
   };
   reader.readAsText(file);
 });
 
-// ═══════════════════════════════
+// ════════════════════════════════════════
 // MENU SHEET
-// ═══════════════════════════════
+// ════════════════════════════════════════
 document.getElementById('menu-btn').addEventListener('click',()=>{
-  document.getElementById('menu-sync-desc').textContent=getGasUrl()?'GASと手動で同期します':'GAS URLが未設定です';
+  document.getElementById('menu-sync-desc').textContent=getGroupGasUrl()?'GASと手動で同期します':'GAS URLが未設定です';
   document.getElementById('menu-sheet').classList.add('open');
 });
 document.getElementById('menu-close-btn').addEventListener('click',()=>document.getElementById('menu-sheet').classList.remove('open'));
 document.getElementById('menu-sheet').addEventListener('click',e=>{if(e.target.id==='menu-sheet')document.getElementById('menu-sheet').classList.remove('open');});
 document.getElementById('menu-sync-btn').addEventListener('click',async()=>{
   document.getElementById('menu-sheet').classList.remove('open');
-  if(!getGasUrl()){showToast('⚠ GAS URLが設定されていません');return;}
+  if(!getGroupGasUrl()){showToast('⚠ GAS URLが設定されていません');return;}
   await syncFromRemote();
 });
-document.getElementById('menu-export-btn').addEventListener('click',()=>{document.getElementById('menu-sheet').classList.remove('open');exportCSV('raw');showToast('⬇ CSVをダウンロード中…');});
-document.getElementById('menu-backup-btn').addEventListener('click',()=>{document.getElementById('menu-sheet').classList.remove('open');backupJSON();showToast('💾 JSONバックアップを保存しました');});
+document.getElementById('menu-export-btn').addEventListener('click',()=>{document.getElementById('menu-sheet').classList.remove('open');exportCSV('raw');});
+document.getElementById('menu-backup-btn').addEventListener('click',()=>{document.getElementById('menu-sheet').classList.remove('open');backupJSON();showToast('💾 バックアップを保存しました');});
 document.getElementById('menu-import-btn').addEventListener('click',()=>{document.getElementById('menu-sheet').classList.remove('open');document.getElementById('import-file-input').click();});
 
-// ═══════════════════════════════
-// TABS
-// ═══════════════════════════════
+// ════════════════════════════════════════
+// MAIN TABS
+// ════════════════════════════════════════
 document.querySelectorAll('.main-tab').forEach(tab=>{
   tab.addEventListener('click',()=>{
     document.querySelectorAll('.main-tab').forEach(t=>t.classList.remove('active'));
@@ -910,49 +1122,59 @@ document.querySelectorAll('.main-tab').forEach(tab=>{
     document.getElementById('tab-agg').style.display=id==='agg'?'':'none';
     document.getElementById('tab-settings').style.display=id==='settings'?'':'none';
     if(id==='agg')renderAgg();
-    if(id==='settings'){renderCatChips();refreshGasStatus();}
+    if(id==='settings'){renderCatChips();renderGroupManage();refreshGasStatus();}
   });
 });
 
-// ═══════════════════════════════
-// CLOCK (1秒ごと)
-// ═══════════════════════════════
+// ════════════════════════════════════════
+// RENDER ALL
+// ════════════════════════════════════════
+function renderAll(){
+  renderGroupTabs();
+  renderUserTabs();
+  renderCtrlCatPicker();
+  updateControlPanel();
+  renderRecordList();
+  // 現在表示中のタブを再描画
+  const activeTab=document.querySelector('.main-tab.active');
+  if(activeTab){
+    const id=activeTab.dataset.tab;
+    if(id==='agg')renderAgg();
+    if(id==='settings'){renderCatChips();renderGroupManage();refreshGasStatus();}
+  }
+}
+
+// ════════════════════════════════════════
+// CLOCK
+// ════════════════════════════════════════
 setInterval(()=>{
   if(sessionState==='idle')return;
   updateRunningBanner();
-  // session-info タイマー
   const active=getActiveRecord();
   if(active&&sessionState==='running'){
     const elapsed=Date.now()-new Date(active.startTime).getTime();
     document.getElementById('session-timer').textContent=fmt(elapsed);
-    // リスト内のカードも更新
     const dur=document.querySelector('.record-card.active-rec .record-dur');
     if(dur)dur.textContent=fmt(elapsed);
   }
 },1000);
 
-// ═══════════════════════════════
+// ════════════════════════════════════════
 // INIT
-// ═══════════════════════════════
+// ════════════════════════════════════════
 updateDateDisplay();
 setInterval(updateDateDisplay,60000);
-loadData();
+ensureDefaultGroup();
 
-// ページ再ロード時、前回 running だったレコードを検出してセッション状態を復元
+// セッション復元
 (function restoreSession(){
   const active=getActiveRecord();
-  if(active){
-    sessionState='running';
-    selectedCat=active.category||'';
-    document.getElementById('ctrl-memo').value=active.memo||'';
-  }
+  if(active){sessionState='running';selectedCat=active.category||'';}
 })();
 
-renderRecordList();
-renderCtrlCatPicker();
-updateControlPanel();
+renderAll();
 refreshGasStatus();
-if(getGasUrl())syncFromRemote(true);
+if(getGroupGasUrl())syncFromRemote(true);
 </script>
 </body>
 </html>
