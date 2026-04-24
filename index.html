@@ -230,6 +230,41 @@ textarea.text-input{height:66px;padding:10px 12px;resize:none;line-height:1.5;wi
 </head>
 <body>
 
+<!-- ══ WELCOME SCREEN ══ -->
+<div id="screen-welcome" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:1000;overflow-y:auto;">
+  <div style="padding:40px 24px calc(40px + env(safe-area-inset-bottom));max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;">
+    <!-- Step1: グループ選択 -->
+    <div id="wc-step1" style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+      <div style="font-size:34px;font-weight:700;letter-spacing:-1px;margin-bottom:4px;text-align:center;">作業<span style="color:var(--accent);">記録</span></div>
+      <div id="wc-step1-sub" style="font-size:13px;color:var(--text3);margin-bottom:28px;text-align:center;">グループを選んでください</div>
+      <div style="margin-bottom:20px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;">登録済みグループ</div>
+        <div id="wc-group-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+      </div>
+      <div style="text-align:center;font-size:12px;color:var(--text3);margin:14px 0;">新しいグループを作成</div>
+      <div style="display:flex;gap:8px;">
+        <input id="wc-group-name" type="text" placeholder="グループ名（例：田中家）" maxlength="20" style="flex:1;height:44px;border:1.5px solid var(--border2);border-radius:12px;padding:0 14px;font-family:inherit;font-size:14px;color:var(--text);background:var(--surface);outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border2)'">
+        <button id="wc-group-add-btn" style="height:44px;padding:0 18px;border-radius:12px;border:none;background:var(--blue);color:white;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;flex-shrink:0;">作成</button>
+      </div>
+    </div>
+    <!-- Step2: ユーザー選択 -->
+    <div id="wc-step2" style="flex:1;display:none;flex-direction:column;justify-content:center;">
+      <button id="wc-back-btn" style="background:none;border:none;color:var(--text3);font-family:inherit;font-size:13px;cursor:pointer;margin-bottom:16px;padding:0;text-align:left;">← グループに戻る</button>
+      <div id="wc-group-title" style="font-size:24px;font-weight:700;letter-spacing:-.5px;margin-bottom:4px;"></div>
+      <div id="wc-user-sub" style="font-size:13px;color:var(--text3);margin-bottom:24px;">あなたはだれですか？（選択するとこのスマホに固定されます）</div>
+      <div id="wc-existing-section" style="display:none;margin-bottom:20px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;">選んでください</div>
+        <div id="wc-user-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+      </div>
+      <div style="text-align:center;font-size:12px;color:var(--text3);margin:14px 0;">または新しくメンバーを作成</div>
+      <div style="display:flex;gap:8px;">
+        <input id="wc-new-name" type="text" placeholder="名前を入力…" maxlength="20" style="flex:1;height:44px;border:1.5px solid var(--border2);border-radius:12px;padding:0 14px;font-family:inherit;font-size:14px;color:var(--text);background:var(--surface);outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border2)'">
+        <button id="wc-add-user-btn" style="height:44px;padding:0 18px;border-radius:12px;border:none;background:var(--accent);color:white;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;flex-shrink:0;">追加</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ══ STICKY HEADER ══ -->
 <div class="sticky-top">
   <div class="header">
@@ -349,6 +384,17 @@ textarea.text-input{height:66px;padding:10px 12px;resize:none;line-height:1.5;wi
   <div class="sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-title" id="menu-sheet-title">メニュー</div>
+    <!-- 親モードトグル -->
+    <div style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:14px 16px;border-radius:12px;border:1px solid var(--border);background:var(--surface);margin-bottom:8px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="menu-icon" style="background:#EAF3DE;">👨‍👩‍👧</div>
+        <div><div style="font-size:14px;font-weight:500;color:var(--text);">全員を表示する（親モード）</div><div class="menu-item-desc">ONにすると全員のタブを確認できます</div></div>
+      </div>
+      <label style="position:relative;width:44px;height:26px;flex-shrink:0;display:block;cursor:pointer;">
+        <input type="checkbox" id="parent-mode-toggle" style="position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1;">
+        <span id="parent-mode-track" style="position:absolute;inset:0;background:var(--border2);border-radius:99px;transition:background .2s;pointer-events:none;"></span>
+      </label>
+    </div>
     <!-- グループ設定 -->
     <button class="menu-item" id="menu-rename-group-btn">
       <div class="menu-icon" style="background:var(--blue-light);">✏️</div>
@@ -364,6 +410,10 @@ textarea.text-input{height:66px;padding:10px 12px;resize:none;line-height:1.5;wi
     </button>
     <hr class="sheet-divider">
     <!-- ユーザー設定 -->
+    <button class="menu-item" id="menu-switch-user-btn">
+      <div class="menu-icon" style="background:var(--blue-light);">🔄</div>
+      <div><div>ユーザーを切り替える</div><div class="menu-item-desc">別のユーザーとして使う（ピン変更）</div></div>
+    </button>
     <button class="menu-item" id="menu-rename-user-btn">
       <div class="menu-icon" style="background:var(--accent-light);">👤</div>
       <div><div id="menu-rename-user-label">名前を変更</div><div class="menu-item-desc">このユーザーの名前を変更</div></div>
@@ -432,6 +482,8 @@ const CURRENT_GROUP_K    = 'wt_current_group';
 const CURRENT_USER_K     = 'wt_current_user';   // per-group: CURRENT_USER_K + '_' + groupId
 const GROUP_DATA_K       = 'wt_gdata';           // per-group: GROUP_DATA_K + '_' + groupId
 const DELETED_GROUPS_KEY = 'wt_deleted_groups';
+const PINNED_KEY         = 'wt_pinned_user';     // per-group: PINNED_KEY + '_' + groupId
+const PARENT_KEY         = 'wt_parent_mode';     // per-group: PARENT_KEY + '_' + groupId
 const DEFAULT_CATS       = ['勉強','読書','睡眠','仕事','遊び','その他'];
 
 // ════════════════════════════════════════
@@ -487,6 +539,16 @@ function getCurrentUser(){
   const id=getCurrentUserId();
   return d.users.find(u=>u.id===id)||d.users[0];
 }
+
+// ════════════════════════════════════════
+// PIN & PARENT MODE
+// ════════════════════════════════════════
+function pinnedKey(){return PINNED_KEY+'_'+getCurrentGroupId();}
+function parentKey(){return PARENT_KEY+'_'+getCurrentGroupId();}
+function getPinnedUserId(){return localStorage.getItem(pinnedKey())||'';}
+function setPinnedUserId(id){localStorage.setItem(pinnedKey(),id);}
+function isParentMode(){return localStorage.getItem(parentKey())==='1';}
+function setParentMode(v){localStorage.setItem(parentKey(),v?'1':'0');}
 
 // ════════════════════════════════════════
 // CONVENIENT GETTERS
@@ -565,6 +627,10 @@ async function syncFromRemote(silent=false){
   saveGroupData(merged);
   if(!silent){setSyncDot('ok');showToast('✅ 同期しました');}
   else setSyncDot('ok');
+  // ピンが有効かチェック
+  const pinned=getPinnedUserId();
+  const d2=loadGroupData();
+  if(pinned&&d2.users.find(u=>u.id===pinned))setCurrentUserId(pinned);
   renderAll();
 }
 
@@ -629,13 +695,18 @@ function renderGroupTabs(){
       if(g.id===getCurrentGroupId())return;
       setCurrentGroupId(g.id);
       sessionState='idle';selectedCat='';
-      if(g.gasUrl){setSyncDot('syncing');await syncFromRemote(true);}
-      else setSyncDot('off');
-      // ピン済みユーザーを使う
-      const cu=getCurrentUserId();
-      const d=loadGroupData();
-      if(!cu||!d.users.find(u=>u.id===cu))setCurrentUserId(d.users[0]?.id||'');
-      renderAll();
+      if(g.gasUrl){
+        setSyncDot('syncing');
+        await syncFromRemote(true); // syncFromRemote内でrenderAll()される
+      }else{
+        setSyncDot('off');
+        // ピン済みユーザーを使う
+        const pinned=getPinnedUserId();
+        const d=loadGroupData();
+        const pid=pinned&&d.users.find(u=>u.id===pinned)?pinned:d.users[0]?.id||'';
+        setCurrentUserId(pid);
+        renderAll();
+      }
     });
     tabs.appendChild(btn);
   });
@@ -652,25 +723,31 @@ function renderGroupTabs(){
 function renderUserTabs(){
   const d=loadGroupData();
   const curUid=getCurrentUserId();
+  const pinnedId=getPinnedUserId();
+  const parent=isParentMode();
   const tabs=document.getElementById('user-tabs');
   tabs.innerHTML='';
-  d.users.forEach(u=>{
+  // 親モード: 全員表示。通常: ピン済みユーザーのみ表示
+  const visibleUsers=parent?d.users:d.users.filter(u=>u.id===pinnedId);
+  visibleUsers.forEach(u=>{
     const btn=document.createElement('button');
     btn.className='user-tab'+(u.id===curUid?' active':'');
     btn.textContent=u.name;
     btn.addEventListener('click',()=>{
       if(u.id===getCurrentUserId())return;
-      // 前のユーザーでセッションが走っていたら警告なく保持（記録は残る）
       sessionState='idle';selectedCat='';
       setCurrentUserId(u.id);
       renderAll();
     });
     tabs.appendChild(btn);
   });
-  const addBtn=document.createElement('button');
-  addBtn.className='add-user-btn';addBtn.title='メンバーを追加';addBtn.textContent='+';
-  addBtn.addEventListener('click',showAddUserForm);
-  tabs.appendChild(addBtn);
+  // ＋ユーザー追加ボタンは親モードのみ
+  if(parent){
+    const addBtn=document.createElement('button');
+    addBtn.className='add-user-btn';addBtn.title='メンバーを追加';addBtn.textContent='+';
+    addBtn.addEventListener('click',showAddUserForm);
+    tabs.appendChild(addBtn);
+  }
 }
 
 // ════════════════════════════════════════
@@ -1139,6 +1216,7 @@ function renderGroupManage(){
         if(!d3.deletedUsers)d3.deletedUsers=[];
         d3.deletedUsers.push(deleted);
         if(getCurrentUserId()===uid){setCurrentUserId(d3.users[0].id);sessionState='idle';selectedCat='';}
+        if(getPinnedUserId()===uid)setPinnedUserId('');
         saveGroupData(d3);saveData();
         ov.remove();renderAll();showToast(`「${targetName}」を一時削除しました（復元可能）`);
       });
@@ -1147,6 +1225,7 @@ function renderGroupManage(){
         const idx=d3.users.findIndex(u=>u.id===uid);if(idx===-1){ov.remove();return;}
         d3.users.splice(idx,1);
         if(getCurrentUserId()===uid){setCurrentUserId(d3.users[0].id);sessionState='idle';selectedCat='';}
+        if(getPinnedUserId()===uid)setPinnedUserId('');
         saveGroupData(d3);saveData();
         ov.remove();renderAll();showToast(`「${targetName}」を完全削除しました`);
       });
@@ -1302,6 +1381,10 @@ document.getElementById('menu-btn').addEventListener('click',()=>{
   document.getElementById('menu-group-name-desc').textContent=cg?cg.name:'';
   document.getElementById('menu-rename-user-label').textContent=`「${cu.name}」の名前を変更`;
   document.getElementById('menu-delete-group-label').textContent=cg?`「${cg.name}」を削除`:'このグループを削除';
+  // 親モードトグルを現在の状態に合わせる
+  const toggle=document.getElementById('parent-mode-toggle');
+  toggle.checked=isParentMode();
+  if(window._applyParentToggleStyle)window._applyParentToggleStyle();
   // 削除ユーザーバッジ
   const duBadge=document.getElementById('menu-deleted-users-badge');
   const du=getDeletedUsers();
@@ -1485,6 +1568,8 @@ document.getElementById('menu-delete-user-btn').addEventListener('click',()=>{
     d.deletedUsers.push(deleted);
     if(!d.users.length){const uid='u'+Date.now();d.users=[{id:uid,name:'わたし',records:[]}];setCurrentUserId(uid);}
     else{setCurrentUserId(d.users[0].id);}
+    // ピンをクリア（次回起動時にウェルカム画面が出る）
+    if(getPinnedUserId()===targetId)setPinnedUserId('');
     sessionState='idle';selectedCat='';
     saveGroupData(d);saveData();
     ov.remove();renderAll();showToast(`「${targetName}」を一時削除しました（復元可能）`);
@@ -1496,6 +1581,8 @@ document.getElementById('menu-delete-user-btn').addEventListener('click',()=>{
     d.users.splice(idx,1);
     if(!d.users.length){const uid='u'+Date.now();d.users=[{id:uid,name:'わたし',records:[]}];setCurrentUserId(uid);}
     else{setCurrentUserId(d.users[0].id);}
+    // ピンをクリア
+    if(getPinnedUserId()===targetId)setPinnedUserId('');
     sessionState='idle';selectedCat='';
     saveGroupData(d);saveData();
     ov.remove();renderAll();showToast(`「${targetName}」を完全削除しました`);
@@ -1595,6 +1682,175 @@ setInterval(()=>{
   }
 },1000);
 
+// ── 定期同期（30秒）──
+let _autoSyncTimer=null;
+function scheduleAutoSync(){
+  if(_autoSyncTimer)clearInterval(_autoSyncTimer);
+  _autoSyncTimer=setInterval(async()=>{
+    if(!getGroupGasUrl())return;
+    const remote=await remoteLoad();if(!remote)return;
+    const local=loadGroupData();
+    // 他ユーザーのデータをバックグラウンドでマージ（UIは変えない）
+    let changed=false;
+    const remoteDeleted=remote.deletedUsers||[];
+    const localDeleted=(local.deletedUsers||[]).slice();
+    remoteDeleted.forEach(ru=>{if(!localDeleted.find(u=>u.id===ru.id)){localDeleted.push(ru);changed=true;}});
+    (remote.users||[]).forEach(ru=>{
+      if(localDeleted.find(u=>u.id===ru.id))return;
+      const lu=local.users.find(u=>u.id===ru.id);
+      if(!lu){local.users.push(ru);changed=true;}
+      else{
+        const lrIds=new Set((lu.records||[]).map(r=>r.id));
+        (ru.records||[]).forEach(rr=>{if(!lrIds.has(rr.id)){lu.records.push(rr);changed=true;}});
+      }
+    });
+    if(changed){local.deletedUsers=localDeleted;saveGroupData(local);}
+  },30000);
+}
+scheduleAutoSync();
+
+// ════════════════════════════════════════
+// WELCOME SCREEN
+// ════════════════════════════════════════
+function showWelcome(){
+  document.getElementById('screen-welcome').style.display='block';
+}
+function hideWelcome(){
+  document.getElementById('screen-welcome').style.display='none';
+}
+
+function renderWelcomeStep1(){
+  document.getElementById('wc-step1').style.display='flex';
+  document.getElementById('wc-step2').style.display='none';
+  const groups=loadGroups();
+  const list=document.getElementById('wc-group-list');list.innerHTML='';
+  if(!groups.length){
+    list.innerHTML='<div style="font-size:13px;color:var(--text3);text-align:center;padding:8px 0;">まだグループがありません<br>下から最初のグループを作成してください</div>';
+  }
+  groups.forEach(g=>{
+    const btn=document.createElement('button');
+    btn.style.cssText='width:100%;padding:14px 18px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:inherit;font-size:15px;font-weight:500;cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;-webkit-tap-highlight-color:transparent;';
+    const gasLabel=g.gasUrl?'<span style="font-size:11px;color:var(--blue);">🔗 共有あり</span>':'<span style="font-size:11px;color:var(--text3);">ローカル</span>';
+    btn.innerHTML=`<div>${esc(g.name)}</div><div style="display:flex;align-items:center;gap:8px;">${gasLabel}<span style="color:var(--text3);font-size:16px;">→</span></div>`;
+    btn.addEventListener('click',()=>{setCurrentGroupId(g.id);renderWelcomeStep2(g);});
+    list.appendChild(btn);
+  });
+}
+
+async function renderWelcomeStep2(group){
+  document.getElementById('wc-step1').style.display='none';
+  const step2=document.getElementById('wc-step2');
+  step2.style.display='flex';step2.style.flexDirection='column';
+  document.getElementById('wc-group-title').textContent=group.name;
+  document.getElementById('wc-user-sub').textContent='データを読み込み中…';
+
+  if(group.gasUrl){
+    setSyncDot('syncing');
+    const remote=await remoteLoad();
+    if(remote){
+      // グループ名リモート反映
+      if(remote.groupName&&remote.groupName!==group.name){
+        const gs=loadGroups();const g=gs.find(g=>g.id===group.id);
+        if(g){g.name=remote.groupName;saveGroups(gs);group=g;}
+        document.getElementById('wc-group-title').textContent=group.name;
+      }
+      // ローカルとリモートをマージ
+      const local=loadGroupData();
+      const merged={...remote,cats:remote.cats||local.cats};
+      // deletedUsersマージ
+      const mergedDeleted=[...(local.deletedUsers||[])];
+      (remote.deletedUsers||[]).forEach(ru=>{if(!mergedDeleted.find(u=>u.id===ru.id))mergedDeleted.push(ru);});
+      merged.deletedUsers=mergedDeleted;
+      merged.users=(merged.users||[]).filter(ru=>!mergedDeleted.find(u=>u.id===ru.id));
+      local.users.forEach(lu=>{if(!merged.users.find(ru=>ru.id===lu.id)&&!mergedDeleted.find(u=>u.id===lu.id))merged.users.push(lu);});
+      saveGroupData(merged);
+      setSyncDot('ok');
+    }else{setSyncDot('err');}
+  }else{setSyncDot('off');}
+
+  document.getElementById('wc-user-sub').textContent='あなたはだれですか？（選択するとこのスマホに固定されます）';
+  const d=loadGroupData();
+  const sec=document.getElementById('wc-existing-section');
+  const list=document.getElementById('wc-user-list');list.innerHTML='';
+  sec.style.display=d.users.length?'block':'none';
+  d.users.forEach(u=>{
+    const btn=document.createElement('button');
+    btn.style.cssText='width:100%;padding:14px 18px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:inherit;font-size:15px;font-weight:500;cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;-webkit-tap-highlight-color:transparent;';
+    btn.innerHTML=`${esc(u.name)}<span style="color:var(--text3);font-size:16px;">→</span>`;
+    btn.addEventListener('click',()=>{
+      setPinnedUserId(u.id);
+      setCurrentUserId(u.id);
+      hideWelcome();
+      renderAll();
+      if(group.gasUrl)syncFromRemote(true);
+    });
+    list.appendChild(btn);
+  });
+}
+
+document.getElementById('wc-back-btn').addEventListener('click',renderWelcomeStep1);
+document.getElementById('wc-group-add-btn').addEventListener('click',()=>{
+  const name=document.getElementById('wc-group-name').value.trim();if(!name)return;
+  const gs=loadGroups();const id='g'+Date.now();
+  gs.push({id,name,gasUrl:''});saveGroups(gs);
+  document.getElementById('wc-group-name').value='';
+  setCurrentGroupId(id);
+  const uid='u'+Date.now();
+  const d={cats:DEFAULT_CATS.slice(),users:[{id:uid,name:'わたし',records:[]}],deletedUsers:[]};
+  localStorage.setItem(GROUP_DATA_K+'_'+id,JSON.stringify(d));
+  setCurrentUserId(uid);
+  renderWelcomeStep2({id,name,gasUrl:''});
+});
+document.getElementById('wc-group-name').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('wc-group-add-btn').click();});
+document.getElementById('wc-add-user-btn').addEventListener('click',async()=>{
+  const input=document.getElementById('wc-new-name');
+  const name=input.value.trim();if(!name)return;
+  const d=loadGroupData();
+  if(d.users.find(u=>u.name===name)){showToast(`「${name}」は既に存在します`);return;}
+  const id='u'+Date.now();
+  d.users.push({id,name,records:[]});
+  saveGroupData(d);await saveData();
+  input.value='';
+  setPinnedUserId(id);setCurrentUserId(id);
+  hideWelcome();renderAll();
+});
+document.getElementById('wc-new-name').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('wc-add-user-btn').click();});
+
+// ════════════════════════════════════════
+// PARENT MODE TOGGLE
+// ════════════════════════════════════════
+(function initParentModeToggle(){
+  const toggle=document.getElementById('parent-mode-toggle');
+  const track=document.getElementById('parent-mode-track');
+  // つまみを1回だけ生成
+  const knob=document.createElement('span');
+  knob.style.cssText='position:absolute;width:20px;height:20px;left:3px;top:3px;background:white;border-radius:50%;transition:transform .2s;pointer-events:none;';
+  track.appendChild(knob);
+  function applyToggleStyle(){
+    const on=toggle.checked;
+    track.style.background=on?'var(--check)':'var(--border2)';
+    knob.style.transform=on?'translateX(18px)':'translateX(0)';
+  }
+  // labelがinputを囲んでいるのでchangeイベントだけで十分（二重発火しない）
+  toggle.addEventListener('change',()=>{
+    setParentMode(toggle.checked);
+    applyToggleStyle();
+    renderAll();
+  });
+  window._applyParentToggleStyle=applyToggleStyle;
+})();
+
+// ════════════════════════════════════════
+// SWITCH USER (ウェルカム画面Step2を再表示)
+// ════════════════════════════════════════
+document.getElementById('menu-switch-user-btn').addEventListener('click',()=>{
+  document.getElementById('menu-sheet').classList.remove('open');
+  const cg=getCurrentGroup();
+  if(!cg)return;
+  showWelcome();
+  renderWelcomeStep2(cg);
+});
+
 // ════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════
@@ -1608,9 +1864,28 @@ ensureDefaultGroup();
   if(active){sessionState='running';selectedCat=active.category||'';}
 })();
 
-renderAll();
-refreshGasStatus();
-if(getGroupGasUrl())syncFromRemote(true);
+// 起動フロー: ピンが有効ならそのままメイン、なければウェルカム画面
+(function init(){
+  const pinned=getPinnedUserId();
+  const d=loadGroupData();
+  if(pinned&&d.users.find(u=>u.id===pinned)){
+    // ピン有効 → メイン画面へ
+    setCurrentUserId(pinned);
+    renderAll();
+    refreshGasStatus();
+    if(getGroupGasUrl())syncFromRemote(true);
+  }else{
+    // ピンなし → ウェルカム画面へ
+    const gs=loadGroups();
+    showWelcome();
+    if(gs.length===1){
+      // グループが1つなら直接Step2へ
+      renderWelcomeStep2(gs[0]);
+    }else{
+      renderWelcomeStep1();
+    }
+  }
+})();
 </script>
 </body>
 </html>
