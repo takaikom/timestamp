@@ -673,6 +673,8 @@ async function syncFromRemote(silent=false){
   // ピンが有効かチェック
   const pinned=getPinnedUserId();
   if(pinned&&merged.users.find(u=>u.id===pinned))setCurrentUserId(pinned);
+  // 同期後もセッション状態を正しく復元（進行中タスクを失わない）
+  restoreSessionState();
   if(!silent){setSyncDot('ok');showToast('✅ 同期しました');}
   else setSyncDot('ok');
   renderAll();
@@ -1995,34 +1997,64 @@ updateDateDisplay();
 setInterval(updateDateDisplay,60000);
 ensureDefaultGroup();
 
-// セッション復元
-(function restoreSession(){
+// ════════════════════════════════════════
+// SESSION RESTORE（どこからでも呼べる関数）
+// ════════════════════════════════════════
+function restoreSessionState(){
   const active=getActiveRecord();
-  if(active){sessionState='running';selectedCat=active.category||'';}
-})();
+  if(active){
+    // endTimeなし＝進行中。pausedAtがあれば一時停止中
+    if(active.pausedAt){sessionState='paused';}
+    else{sessionState='running';}
+    selectedCat=active.category||'';
+  }else{
+    // アクティブな記録がなければidleに戻す
+    sessionState='idle';
+  }
+}
+
+// ════════════════════════════════════════
+// 起動時セッション復元
+// ════════════════════════════════════════
+restoreSessionState();
 
 // 起動フロー: ピンが有効ならそのままメイン、なければウェルカム画面
 (function init(){
   const pinned=getPinnedUserId();
   const d=loadGroupData();
   if(pinned&&d.users.find(u=>u.id===pinned)){
-    // ピン有効 → メイン画面へ
     setCurrentUserId(pinned);
     renderAll();
     refreshGasStatus();
     if(getGroupGasUrl())syncFromRemote(true);
   }else{
-    // ピンなし → ウェルカム画面へ
     const gs=loadGroups();
     showWelcome();
-    if(gs.length===1){
-      // グループが1つなら直接Step2へ
-      renderWelcomeStep2(gs[0]);
-    }else{
-      renderWelcomeStep1();
-    }
+    if(gs.length===1){renderWelcomeStep2(gs[0]);}
+    else{renderWelcomeStep1();}
   }
 })();
+
+// ── バックグラウンド復帰時のセッション再チェック ──
+// iOSのbfcache復元・タブ再表示でsessionStateがリセットされる問題を防ぐ
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'){
+    restoreSessionState();
+    updateControlPanel();
+    renderRecordList();
+  }
+});
+window.addEventListener('pageshow',e=>{
+  if(e.persisted){
+    // bfcacheからの復元（iOS Safari）
+    restoreSessionState();
+    renderAll();
+  }
+});
+window.addEventListener('focus',()=>{
+  restoreSessionState();
+  updateControlPanel();
+});
 </script>
 </body>
 </html>
