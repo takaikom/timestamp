@@ -48,8 +48,11 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 /* ── USER TABS (オレンジ) ── */
 .user-tabs{display:flex;align-items:center;overflow-x:auto;padding:0 12px;scrollbar-width:none;border-top:1px solid var(--border);background:var(--surface);}
 .user-tabs::-webkit-scrollbar{display:none;}
-.user-tab{flex-shrink:0;padding:8px 14px;font-size:13px;font-weight:500;color:var(--text3);border:none;background:transparent;cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-1px;transition:color .15s,border-color .15s;white-space:nowrap;font-family:'Noto Sans JP',sans-serif;-webkit-tap-highlight-color:transparent;}
+.user-tab{flex-shrink:0;padding:8px 14px;font-size:13px;font-weight:500;color:var(--text3);border:none;background:transparent;cursor:grab;border-bottom:2.5px solid transparent;margin-bottom:-1px;transition:color .15s,border-color .15s;white-space:nowrap;font-family:'Noto Sans JP',sans-serif;-webkit-tap-highlight-color:transparent;user-select:none;touch-action:none;}
 .user-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.user-tab.drag-dragging{opacity:0.35;background:var(--surface2);}
+.user-tab.drag-over{border-bottom:2.5px solid var(--blue);color:var(--blue);}
+.user-tab-ghost{position:fixed;pointer-events:none;z-index:9999;padding:8px 14px;font-size:13px;font-weight:700;color:var(--accent);background:var(--accent-light);border:1.5px solid var(--accent);border-radius:8px;white-space:nowrap;font-family:'Noto Sans JP',sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.18);opacity:.92;}
 .add-user-btn{flex-shrink:0;width:26px;height:26px;border-radius:50%;border:1.5px dashed var(--border2);background:transparent;color:var(--text3);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;margin-left:6px;-webkit-tap-highlight-color:transparent;}
 .add-user-btn:active{border-color:var(--accent);color:var(--accent);}
 
@@ -770,18 +773,155 @@ function renderUserTabs(){
   tabs.innerHTML='';
   // 親モード: 全員表示。通常: ピン済みユーザーのみ表示
   const visibleUsers=parent?d.users:d.users.filter(u=>u.id===pinnedId);
+
+  // ── ドラッグ状態 ──
+  let dragSrcId=null,ghost=null,isDragging=false;
+  let startX=0,startY=0,dragOffX=0,dragOffY=0;
+  let longPressTimer=null;
+
+  function moveGhost(x,y){
+    if(!ghost)return;
+    ghost.style.left=(x-dragOffX)+'px';
+    ghost.style.top=(y-dragOffY)+'px';
+  }
+
+  function getTargetUid(x,y){
+    if(ghost)ghost.style.display='none';
+    const el=document.elementFromPoint(x,y);
+    if(ghost)ghost.style.display='';
+    if(!el)return null;
+    const btn=el.closest('[data-uid]');
+    return btn?btn.dataset.uid:null;
+  }
+
+  function endDrag(finalX,finalY){
+    isDragging=false;
+    const tgtId=getTargetUid(finalX,finalY);
+    if(ghost){ghost.remove();ghost=null;}
+    tabs.querySelectorAll('.drag-dragging,.drag-over').forEach(el=>el.classList.remove('drag-dragging','drag-over'));
+    document.body.style.cursor='';
+    if(tgtId&&tgtId!==dragSrcId){
+      mutateUser_global(dragSrcId,tgtId);
+      renderAll();
+      showToast('✅ 並び順を変更しました');
+    }
+    dragSrcId=null;
+  }
+
   visibleUsers.forEach(u=>{
     const btn=document.createElement('button');
     btn.className='user-tab'+(u.id===curUid?' active':'');
+    btn.dataset.uid=u.id;
     btn.textContent=u.name;
-    btn.addEventListener('click',()=>{
+
+    // ── タッチ操作（長押し400ms→ドラッグ）──
+    btn.addEventListener('touchstart',e=>{
+      startX=e.touches[0].clientX;startY=e.touches[0].clientY;
+      dragSrcId=u.id;isDragging=false;
+      longPressTimer=setTimeout(()=>{
+        isDragging=true;
+        const rect=btn.getBoundingClientRect();
+        dragOffX=startX-rect.left;dragOffY=startY-rect.top;
+        btn.classList.add('drag-dragging');
+        ghost=document.createElement('div');
+        ghost.className='user-tab-ghost';
+        ghost.textContent=btn.textContent;
+        document.body.appendChild(ghost);
+        moveGhost(startX,startY);
+        if(navigator.vibrate)navigator.vibrate(40);
+      },400);
+    },{passive:true});
+
+    btn.addEventListener('touchmove',e=>{
+      const cx=e.touches[0].clientX,cy=e.touches[0].clientY;
+      if(!isDragging){
+        if(Math.abs(cx-startX)>6||Math.abs(cy-startY)>6){
+          clearTimeout(longPressTimer);longPressTimer=null;dragSrcId=null;
+        }
+        return;
+      }
+      e.preventDefault();
+      moveGhost(cx,cy);
+      tabs.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
+      const tgtId=getTargetUid(cx,cy);
+      if(tgtId&&tgtId!==dragSrcId){
+        const tgtBtn=tabs.querySelector(`[data-uid="${tgtId}"]`);
+        if(tgtBtn)tgtBtn.classList.add('drag-over');
+      }
+    },{passive:false});
+
+    btn.addEventListener('touchend',e=>{
+      clearTimeout(longPressTimer);longPressTimer=null;
+      if(!isDragging){
+        // 短タップ → ユーザー切り替え
+        if(u.id!==getCurrentUserId()){
+          sessionState='idle';selectedCat='';
+          setCurrentUserId(u.id);renderAll();
+        }
+        return;
+      }
+      const t=e.changedTouches[0];
+      endDrag(t.clientX,t.clientY);
+    },{passive:true});
+
+    btn.addEventListener('touchcancel',()=>{
+      clearTimeout(longPressTimer);longPressTimer=null;
+      if(ghost){ghost.remove();ghost=null;}
+      tabs.querySelectorAll('.drag-dragging,.drag-over').forEach(el=>el.classList.remove('drag-dragging','drag-over'));
+      isDragging=false;dragSrcId=null;
+    },{passive:true});
+
+    // ── マウス操作（長押し300ms→ドラッグ）──
+    btn.addEventListener('mousedown',e=>{
+      if(e.button!==0)return;
+      startX=e.clientX;startY=e.clientY;
+      dragSrcId=u.id;isDragging=false;
+      longPressTimer=setTimeout(()=>{
+        isDragging=true;
+        const rect=btn.getBoundingClientRect();
+        dragOffX=e.clientX-rect.left;dragOffY=e.clientY-rect.top;
+        btn.classList.add('drag-dragging');
+        ghost=document.createElement('div');
+        ghost.className='user-tab-ghost';
+        ghost.textContent=btn.textContent;
+        document.body.appendChild(ghost);
+        moveGhost(e.clientX,e.clientY);
+        document.body.style.cursor='grabbing';
+      },300);
+    });
+
+    btn.addEventListener('click',e=>{
+      if(isDragging){e.preventDefault();return;}
+      clearTimeout(longPressTimer);longPressTimer=null;
       if(u.id===getCurrentUserId())return;
       sessionState='idle';selectedCat='';
-      setCurrentUserId(u.id);
-      renderAll();
+      setCurrentUserId(u.id);renderAll();
     });
+
     tabs.appendChild(btn);
   });
+
+  // マウスムーブ・アップはdocumentで捕捉
+  const onMouseMove=e=>{
+    if(!isDragging)return;
+    moveGhost(e.clientX,e.clientY);
+    tabs.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
+    const tgtId=getTargetUid(e.clientX,e.clientY);
+    if(tgtId&&tgtId!==dragSrcId){
+      const tgtBtn=tabs.querySelector(`[data-uid="${tgtId}"]`);
+      if(tgtBtn)tgtBtn.classList.add('drag-over');
+    }
+  };
+  const onMouseUp=e=>{
+    clearTimeout(longPressTimer);longPressTimer=null;
+    document.removeEventListener('mousemove',onMouseMove);
+    document.removeEventListener('mouseup',onMouseUp);
+    if(!isDragging){isDragging=false;dragSrcId=null;document.body.style.cursor='';return;}
+    endDrag(e.clientX,e.clientY);
+  };
+  document.addEventListener('mousemove',onMouseMove);
+  document.addEventListener('mouseup',onMouseUp);
+
   // ＋ユーザー追加ボタンは親モードのみ
   if(parent){
     const addBtn=document.createElement('button');
@@ -789,6 +929,19 @@ function renderUserTabs(){
     addBtn.addEventListener('click',showAddUserForm);
     tabs.appendChild(addBtn);
   }
+}
+
+// グローバルなユーザー並び替え関数
+function mutateUser_global(srcId,tgtId){
+  const d=loadGroupData();
+  const users=d.users;
+  const si=users.findIndex(u=>u.id===srcId);
+  const ti=users.findIndex(u=>u.id===tgtId);
+  if(si<0||ti<0)return;
+  const [moved]=users.splice(si,1);
+  users.splice(ti,0,moved);
+  saveGroupData(d);
+  saveData();
 }
 
 // ════════════════════════════════════════
