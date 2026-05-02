@@ -50,6 +50,8 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .user-tabs::-webkit-scrollbar{display:none;}
 .user-tab{flex-shrink:0;padding:8px 14px;font-size:13px;font-weight:500;color:var(--text3);border:none;background:transparent;cursor:grab;border-bottom:2.5px solid transparent;margin-bottom:-1px;transition:color .15s,border-color .15s;white-space:nowrap;font-family:'Noto Sans JP',sans-serif;-webkit-tap-highlight-color:transparent;user-select:none;touch-action:none;}
 .user-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.user-tab.is-me{background:var(--accent-light);color:var(--accent-dark);}
+.user-tab.is-me.active{color:var(--accent-dark);border-bottom-color:var(--accent);}
 .user-tab.drag-dragging{opacity:0.35;background:var(--surface2);}
 .user-tab.drag-over{border-bottom:2.5px solid var(--blue);color:var(--blue);}
 .user-tab-ghost{position:fixed;pointer-events:none;z-index:9999;padding:8px 14px;font-size:13px;font-weight:700;color:var(--accent);background:var(--accent-light);border:1.5px solid var(--accent);border-radius:8px;white-space:nowrap;font-family:'Noto Sans JP',sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.18);opacity:.92;}
@@ -152,7 +154,9 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .settings-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;}
 .settings-card-title{font-size:13px;font-weight:700;margin-bottom:12px;color:var(--text2);}
 .cat-chip-list{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
-.cat-chip{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;border:1.5px solid var(--border2);background:var(--surface2);font-size:13px;color:var(--text2);}
+.cat-chip{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;border:1.5px solid var(--border2);background:var(--surface2);font-size:13px;color:var(--text2);cursor:grab;user-select:none;transition:opacity .15s,box-shadow .15s;}
+.cat-chip.chip-dragging{opacity:.3;cursor:grabbing;}
+.cat-chip.chip-drag-over{box-shadow:inset 2px 0 0 var(--accent),0 0 0 1.5px var(--accent);}
 .cat-chip-del{background:none;border:none;color:var(--text3);font-size:14px;cursor:pointer;line-height:1;padding:0;}
 .cat-chip-del:active{color:var(--red-mid);}
 .add-row{display:flex;gap:8px;}
@@ -255,6 +259,20 @@ textarea.text-input{height:66px;padding:10px 12px;resize:none;line-height:1.5;wi
         <input id="wc-group-name" type="text" placeholder="グループ名（例：田中家）" maxlength="20" style="flex:1;height:44px;border:1.5px solid var(--border2);border-radius:12px;padding:0 14px;font-family:inherit;font-size:14px;color:var(--text);background:var(--surface);outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border2)'">
         <button id="wc-group-add-btn" style="height:44px;padding:0 18px;border-radius:12px;border:none;background:var(--blue);color:white;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;flex-shrink:0;">作成</button>
       </div>
+      <!-- GAS接続 -->
+      <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;">🔗 別デバイスから共有グループに参加する場合</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">GAS URLを入力して接続・同期すると、グループとメンバーが読み込まれます。</div>
+        <input id="wc-gas-url" type="url" placeholder="https://script.google.com/macros/s/..." style="width:100%;height:40px;border:1.5px solid var(--border2);border-radius:10px;padding:0 12px;font-family:inherit;font-size:12px;color:var(--text);background:var(--surface);outline:none;margin-bottom:8px;" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border2)'">
+        <button id="wc-gas-connect-btn" style="width:100%;height:40px;border-radius:10px;border:none;background:var(--blue);color:white;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;">接続・同期してグループを読み込む</button>
+        <div id="wc-gas-status" style="font-size:11px;color:var(--text3);margin-top:6px;min-height:14px;text-align:center;"></div>
+      </div>
+      <!-- ご利用にあたって -->
+      <div style="margin-top:16px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;font-size:10px;color:var(--text3);line-height:1.7;">
+        <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;">⚠️ ご利用にあたって</div>
+        このアプリは開発者が個人利用目的で開発したツールです。勝手に機能・仕様変更し、それに伴い不具合が発生したり、予告なく公開終了する可能性があります。<b>ご利用は自己責任でお願いします。</b>
+        データの保証はできません。大切な情報は<b>定期的にご自身でバックアップ</b>してください。
+      </div>
     </div>
     <!-- Step2: ユーザー選択 -->
     <div id="wc-step2" style="flex:1;display:none;flex-direction:column;justify-content:center;">
@@ -348,12 +366,7 @@ textarea.text-input{height:66px;padding:10px 12px;resize:none;line-height:1.5;wi
 
 <!-- ══ TAB: 設定 ══ -->
 <div id="tab-settings" class="tab-body" style="display:none;">
-  <!-- グループ管理 -->
-  <div class="settings-card">
-    <div class="settings-card-title">👥 グループ管理</div>
-    <div id="group-manage-list"></div>
-  </div>
-  <!-- カテゴリ管理 (グループ共通) -->
+  <!-- カテゴリ管理（最上部） -->
   <div class="settings-card">
     <div class="settings-card-title">📂 カテゴリ（自分用）</div>
     <div class="cat-chip-list" id="cat-chip-list"></div>
@@ -361,6 +374,11 @@ textarea.text-input{height:66px;padding:10px 12px;resize:none;line-height:1.5;wi
       <input class="text-input" id="new-cat-input" type="text" placeholder="新しいカテゴリ名" maxlength="20">
       <button class="primary-btn" id="add-cat-btn">追加</button>
     </div>
+  </div>
+  <!-- グループ管理 -->
+  <div class="settings-card">
+    <div class="settings-card-title">👥 グループ管理</div>
+    <div id="group-manage-list"></div>
   </div>
   <!-- GAS連携 -->
   <div class="settings-card">
@@ -405,34 +423,39 @@ textarea.text-input{height:66px;padding:10px 12px;resize:none;line-height:1.5;wi
           <span id="parent-mode-track" style="position:absolute;inset:0;background:var(--border2);border-radius:99px;transition:background .2s;pointer-events:none;"></span>
         </label>
       </div>
+      <!-- GAS送受信 -->
+      <button class="menu-item" id="menu-sync-btn">
+        <div class="menu-icon" style="background:var(--blue-light);">☁️</div>
+        <div><div>GASへ送信（アップロード）</div><div class="menu-item-desc">このデバイスのデータをGASに保存</div></div>
+      </button>
+      <button class="menu-item" id="menu-sync-from-btn">
+        <div class="menu-icon" style="background:var(--green-light);">⬇️</div>
+        <div><div>GASから受信（ダウンロード）</div><div class="menu-item-desc" id="menu-sync-desc">GASのデータをこのデバイスに取り込む</div></div>
+      </button>
+      <!-- グループ／ユーザー切り替え -->
+      <button class="menu-item" id="menu-switch-user-btn">
+        <div class="menu-icon" style="background:var(--blue-light);">🔄</div>
+        <div><div>グループ／ユーザーを切り替える</div><div class="menu-item-desc">別のグループ・ユーザーとして使う</div></div>
+      </button>
       <!-- グループ設定 -->
       <button class="menu-item" id="menu-rename-group-btn">
         <div class="menu-icon" style="background:var(--blue-light);">✏️</div>
         <div><div id="menu-rename-group-label">グループ名を変更</div><div class="menu-item-desc" id="menu-group-name-desc"></div></div>
       </button>
-      <button class="menu-item" id="menu-sync-btn">
-        <div class="menu-icon" style="background:var(--blue-light);">🔄</div>
-        <div><div>今すぐ同期</div><div class="menu-item-desc" id="menu-sync-desc">GASと手動で同期します</div></div>
-      </button>
       <button class="menu-item" id="menu-delete-group-btn">
         <div class="menu-icon" style="background:var(--red-light);">🗑️</div>
         <div><div id="menu-delete-group-label">このグループを削除</div><div class="menu-item-desc">一時削除（復元可能）</div></div>
       </button>
-      <hr class="sheet-divider">
       <!-- ユーザー設定 -->
-      <button class="menu-item" id="menu-switch-user-btn">
-        <div class="menu-icon" style="background:var(--blue-light);">🔄</div>
-        <div><div>ユーザーを切り替える</div><div class="menu-item-desc">別のユーザーとして使う（ピン変更）</div></div>
-      </button>
       <button class="menu-item" id="menu-rename-user-btn">
         <div class="menu-icon" style="background:var(--accent-light);">👤</div>
         <div><div id="menu-rename-user-label">名前を変更</div><div class="menu-item-desc">このユーザーの名前を変更</div></div>
       </button>
       <button class="menu-item" id="menu-delete-user-btn">
         <div class="menu-icon" style="background:var(--red-light);">🗑️</div>
-        <div><div>このユーザーを削除</div><div class="menu-item-desc">一時削除（復元可能）</div></div>
+        <div><div id="menu-delete-user-label">このユーザーを削除</div><div class="menu-item-desc">一時削除（復元可能）</div></div>
       </button>
-      <button class="menu-item" id="menu-deleted-users-btn">
+      <button class="menu-item" id="menu-deleted-users-btn" style="display:none;">
         <div class="menu-icon" style="background:var(--amber-light);">👤</div>
         <div><div>削除したユーザー <span id="menu-deleted-users-badge" style="display:none;background:var(--amber);color:white;border-radius:99px;font-size:11px;padding:1px 7px;margin-left:4px;"></span></div><div class="menu-item-desc">一時削除したユーザーを復元</div></div>
       </button>
@@ -810,9 +833,10 @@ function renderUserTabs(){
 
   visibleUsers.forEach(u=>{
     const btn=document.createElement('button');
-    btn.className='user-tab'+(u.id===curUid?' active':'');
+    const isMe=parent&&u.id===pinnedId;
+    btn.className='user-tab'+(u.id===curUid?' active':'')+(isMe?' is-me':'');
     btn.dataset.uid=u.id;
-    btn.textContent=u.name;
+    btn.textContent=u.name+(isMe?' 👤':'');
 
     // ── タッチ操作（長押し400ms→ドラッグ）──
     btn.addEventListener('touchstart',e=>{
@@ -1277,6 +1301,66 @@ function renderCatChips(){
       showToast('カテゴリを削除しました');
     });
   });
+
+  // ── 長押しドラッグ並び替え ──
+  let dragIdx=null,ghost=null,offX=0,offY=0,lpTimer=null,dragging=false,sx=0,sy=0;
+  function chips(){return[...list.querySelectorAll('.cat-chip')];}
+  function nearestIdx(cx,cy){
+    let best=null,bestD=Infinity;
+    chips().forEach((c,i)=>{const r=c.getBoundingClientRect();const d=Math.hypot(cx-(r.left+r.width/2),cy-(r.top+r.height/2));if(d<bestD){bestD=d;best=i;}});
+    return best;
+  }
+  function startDrag(chip,cx,cy){
+    dragging=true;dragIdx=chips().indexOf(chip);
+    const r=chip.getBoundingClientRect();offX=cx-r.left;offY=cy-r.top;
+    chip.classList.add('chip-dragging');
+    ghost=document.createElement('div');
+    ghost.className='cat-chip';
+    ghost.style.cssText='position:fixed;z-index:9999;pointer-events:none;opacity:.9;box-shadow:0 4px 16px rgba(0,0,0,.2);background:var(--accent-light);border-color:var(--accent);color:var(--accent-dark);';
+    ghost.textContent=chip.querySelector('span').textContent;
+    document.body.appendChild(ghost);
+    ghost.style.left=(cx-offX)+'px';ghost.style.top=(cy-offY)+'px';
+    if(navigator.vibrate)navigator.vibrate(40);
+  }
+  function moveGhost(cx,cy){if(ghost){ghost.style.left=(cx-offX)+'px';ghost.style.top=(cy-offY)+'px';}}
+  function endDrag(cx,cy){
+    if(!dragging){clearTimeout(lpTimer);lpTimer=null;dragIdx=null;return;}
+    dragging=false;clearTimeout(lpTimer);lpTimer=null;
+    if(ghost){ghost.remove();ghost=null;}
+    list.querySelectorAll('.chip-dragging,.chip-drag-over').forEach(c=>c.classList.remove('chip-dragging','chip-drag-over'));
+    const toIdx=nearestIdx(cx,cy);
+    if(toIdx!=null&&toIdx!==dragIdx){
+      mutateCats(cs=>{const [m]=cs.splice(dragIdx,1);cs.splice(toIdx,0,m);return cs;});
+      saveData();renderCatChips();renderCtrlCatPicker();
+    }
+    dragIdx=null;
+  }
+  list.addEventListener('touchstart',e=>{
+    const chip=e.target.closest('.cat-chip');if(!chip||e.target.classList.contains('cat-chip-del'))return;
+    sx=e.touches[0].clientX;sy=e.touches[0].clientY;dragging=false;
+    lpTimer=setTimeout(()=>startDrag(chip,sx,sy),380);
+  },{passive:true});
+  list.addEventListener('touchmove',e=>{
+    const cx=e.touches[0].clientX,cy=e.touches[0].clientY;
+    if(!dragging&&(Math.abs(cx-sx)>6||Math.abs(cy-sy)>6)){clearTimeout(lpTimer);lpTimer=null;return;}
+    if(!dragging)return;
+    e.preventDefault();moveGhost(cx,cy);
+    list.querySelectorAll('.chip-drag-over').forEach(c=>c.classList.remove('chip-drag-over'));
+    const ti=nearestIdx(cx,cy);if(ti!=null&&ti!==dragIdx)chips()[ti]?.classList.add('chip-drag-over');
+  },{passive:false});
+  list.addEventListener('touchend',e=>{const t=e.changedTouches[0];endDrag(t.clientX,t.clientY);},{passive:true});
+  list.addEventListener('touchcancel',()=>{clearTimeout(lpTimer);lpTimer=null;dragging=false;dragIdx=null;if(ghost){ghost.remove();ghost=null;}list.querySelectorAll('.chip-dragging,.chip-drag-over').forEach(c=>c.classList.remove('chip-dragging','chip-drag-over'));},{passive:true});
+  list.addEventListener('mousedown',e=>{
+    const chip=e.target.closest('.cat-chip');if(!chip||e.target.classList.contains('cat-chip-del'))return;
+    sx=e.clientX;sy=e.clientY;dragging=false;
+    lpTimer=setTimeout(()=>startDrag(chip,sx,sy),280);
+  });
+  document.addEventListener('mousemove',e=>{
+    if(!dragging)return;moveGhost(e.clientX,e.clientY);
+    list.querySelectorAll('.chip-drag-over').forEach(c=>c.classList.remove('chip-drag-over'));
+    const ti=nearestIdx(e.clientX,e.clientY);if(ti!=null&&ti!==dragIdx)chips()[ti]?.classList.add('chip-drag-over');
+  });
+  document.addEventListener('mouseup',e=>{if(dragIdx!=null)endDrag(e.clientX,e.clientY);clearTimeout(lpTimer);lpTimer=null;});
 }
 document.getElementById('add-cat-btn').addEventListener('click',()=>{
   const v=document.getElementById('new-cat-input').value.trim();
@@ -1660,10 +1744,11 @@ document.getElementById('menu-btn').addEventListener('click',()=>{
   const cu=getCurrentUser();
   document.getElementById('menu-sheet-title').textContent=`${cg?cg.name+' / ':''}${cu.name}`;
   document.getElementById('menu-sync-desc').textContent=getGroupGasUrl()?'GASと手動で同期します':'GAS URLが未設定です';
-  document.getElementById('menu-rename-group-label').textContent=`グループ名を変更`;
+  document.getElementById('menu-rename-group-label').textContent=cg?`グループ「${cg.name}」の名前を変更`:'グループ名を変更';
   document.getElementById('menu-group-name-desc').textContent=cg?cg.name:'';
-  document.getElementById('menu-rename-user-label').textContent=`「${cu.name}」の名前を変更`;
-  document.getElementById('menu-delete-group-label').textContent=cg?`「${cg.name}」を削除`:'このグループを削除';
+  document.getElementById('menu-rename-user-label').textContent=`ユーザー「${cu.name}」の名前を変更`;
+  document.getElementById('menu-delete-user-label').textContent=`ユーザー「${cu.name}」を削除`;
+  document.getElementById('menu-delete-group-label').textContent=cg?`グループ「${cg.name}」を削除`:'このグループを削除';
   // 親モードトグルを現在の状態に合わせる
   const toggle=document.getElementById('parent-mode-toggle');
   toggle.checked=isParentMode();
@@ -1685,6 +1770,14 @@ document.getElementById('menu-btn').addEventListener('click',()=>{
 document.getElementById('menu-close-btn').addEventListener('click',()=>document.getElementById('menu-sheet').classList.remove('open'));
 document.getElementById('menu-sheet').addEventListener('click',e=>{if(e.target.id==='menu-sheet')document.getElementById('menu-sheet').classList.remove('open');});
 document.getElementById('menu-sync-btn').addEventListener('click',async()=>{
+  document.getElementById('menu-sheet').classList.remove('open');
+  if(!getGroupGasUrl()){showToast('⚠ GAS URLが設定されていません');return;}
+  const local=loadGroupData();const cg=getCurrentGroup();
+  setSyncDot('syncing');
+  const ok=await remoteSave(cg?{...local,groupName:cg.name}:local);
+  if(ok)showToast('☁️ GASへ送信しました');else showToast('⚠ 送信に失敗しました');
+});
+document.getElementById('menu-sync-from-btn').addEventListener('click',async()=>{
   document.getElementById('menu-sheet').classList.remove('open');
   if(!getGroupGasUrl()){showToast('⚠ GAS URLが設定されていません');return;}
   await syncFromRemote();
@@ -2095,6 +2188,35 @@ async function renderWelcomeStep2(group){
 }
 
 document.getElementById('wc-back-btn').addEventListener('click',renderWelcomeStep1);
+
+// ── WELCOME GAS接続 ──
+document.getElementById('wc-gas-connect-btn').addEventListener('click',async()=>{
+  const urlEl=document.getElementById('wc-gas-url');
+  const statusEl=document.getElementById('wc-gas-status');
+  const url=urlEl.value.trim();
+  if(!url){statusEl.textContent='⚠️ URLを入力してください';return;}
+  statusEl.textContent='接続中…';
+  const remote=await remoteLoad(url);
+  if(!remote){statusEl.textContent='❌ 接続に失敗しました。URLを確認してください';return;}
+  const remoteName=remote.groupName||'共有グループ';
+  const gs=loadGroups();
+  let g=gs.find(g=>g.gasUrl===url);
+  if(!g){const id='g'+Date.now();g={id,name:remoteName,gasUrl:url};gs.push(g);saveGroups(gs);}
+  setCurrentGroupId(g.id);
+  // リモートデータをマージ保存
+  const local=loadGroupData();
+  const merged={...remote,groupName:remoteName};
+  const mergedDel=[...(local.deletedUsers||[])];
+  (remote.deletedUsers||[]).forEach(ru=>{if(!mergedDel.find(u=>u.id===ru.id))mergedDel.push(ru);});
+  merged.deletedUsers=mergedDel;
+  merged.users=(remote.users||[]).filter(ru=>!mergedDel.find(u=>u.id===ru.id));
+  local.users.forEach(lu=>{if(!merged.users.find(ru=>ru.id===lu.id)&&!mergedDel.find(u=>u.id===lu.id))merged.users.push(lu);});
+  if(!merged.users.find(u=>u.id===getCurrentUserId())&&merged.users[0])setCurrentUserId(merged.users[0].id);
+  saveGroupData(merged);setSyncDot('ok');
+  statusEl.textContent='✅ 同期しました！メンバーを選んでください';
+  renderGroupTabs();
+  renderWelcomeStep2(g);
+});
 document.getElementById('wc-group-add-btn').addEventListener('click',()=>{
   const name=document.getElementById('wc-group-name').value.trim();if(!name)return;
   const gs=loadGroups();const id='g'+Date.now();
@@ -2187,6 +2309,15 @@ restoreSessionState();
 
 // 起動フロー: ピンが有効ならそのままメイン、なければウェルカム画面
 (function init(){
+  const LAUNCHED_KEY='worktracker_launched';
+  const hasLaunched=!!localStorage.getItem(LAUNCHED_KEY);
+  localStorage.setItem(LAUNCHED_KEY,'1');
+
+  if(!hasLaunched){
+    // 完全初回 → Step1（グループ選択）を表示
+    showWelcome();renderWelcomeStep1();return;
+  }
+
   const pinned=getPinnedUserId();
   const d=loadGroupData();
   if(pinned&&d.users.find(u=>u.id===pinned)){
