@@ -1,0 +1,25 @@
+{
+  "name": "作業記録",
+  "short_name": "作業記録",
+  "description": "作業時間をグループで記録・共有するアプリ",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#F7F4EF",
+  "theme_color": "#D85A30",
+  "orientation": "portrait-primary",
+  "lang": "ja",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
