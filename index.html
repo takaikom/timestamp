@@ -1,8 +1,16 @@
 <!DOCTYPE html>
-<!-- ============================================================
+<!--
+  ※コードを修正したら以下に変更履歴を記録すること！
+  ============================================================
+  作業記録 v23 - (2025-06-06)
+  ──────────────────────────────────────────────────────────────
+  タイマーデフォルトを 0:0:0 に変更
+  タイマーを設定パネルを開かなくてもオン/オフ切り替えできるように、⏱ タイマーOFF / ⏱ タイマーON ボタンを追加
+
+  ============================================================
   作業記録 v22 - (2025-06-06)
   ──────────────────────────────────────────────────────────────
-  ・STARTボタンの縦幅を2倍（54px → 108px）に変更
+  ・START/STOPボタンの縦幅を2倍（54px → 80px）に変更
   ・記録一覧のカテゴリ名枠（.rec-cat-label）を文字数幅に合わせるよう変更
       .rec-cat-col（幅10em固定）を外側ラッパーとして追加し、その中でラベルを文字幅に収縮
       10文字超えは末尾「…」に切り詰め（JS＋CSSの二重保護）
@@ -529,7 +537,10 @@ textarea.text-input{height:66px;padding:10px 12px;resize:none;line-height:1.5;wi
     </div>
     <!-- タイマー設定 -->
     <div class="timer-toggle-row">
-      <button class="timer-toggle-btn" id="timer-toggle-btn">⏱ タイマー設定</button>
+      <div style="display:flex;align-items:center;gap:8px;width:100%;">
+        <button class="timer-toggle-btn" id="timer-enable-btn">⏱ タイマーOFF</button>
+        <button class="timer-toggle-btn" id="timer-toggle-btn">⏱ タイマー設定</button>
+      </div>
       <div class="timer-countdown" id="timer-countdown" style="display:none;"></div>
     </div>
     <div class="timer-panel" id="timer-panel" style="display:none;">
@@ -541,7 +552,7 @@ textarea.text-input{height:66px;padding:10px 12px;resize:none;line-height:1.5;wi
         <div class="timer-sep">:</div>
         <div class="timer-field">
           <label>分</label>
-          <input type="number" class="timer-num" id="timer-m" min="0" max="59" value="25" inputmode="numeric">
+          <input type="number" class="timer-num" id="timer-m" min="0" max="59" value="0" inputmode="numeric">
         </div>
         <div class="timer-sep">:</div>
         <div class="timer-field">
@@ -1459,6 +1470,7 @@ function updateRunningBanner(){
 // ════════════════════════════════════════
 const LS_TIMER = 'wt_timer_setting';
 let timerPanelOpen = false;
+let timerEnabled = false;
 let timerEndTime = null;    // Date: タイマー終了予定時刻（記録中のみ有効）
 let timerDurationMs = 0;    // 設定した時間(ms)
 let timerFired = false;     // 今セッションで鳴らしたか
@@ -1466,8 +1478,8 @@ let timerFired = false;     // 今セッションで鳴らしたか
 function loadTimerSetting(){
   try{ return JSON.parse(localStorage.getItem(LS_TIMER)||'null'); }catch{ return null; }
 }
-function saveTimerSetting(h,m,s){
-  localStorage.setItem(LS_TIMER, JSON.stringify({h,m,s}));
+function saveTimerSetting(h,m,s,enabled=true){
+  localStorage.setItem(LS_TIMER, JSON.stringify({h,m,s,enabled:!!enabled}));
 }
 
 function getTimerMs(){
@@ -1477,10 +1489,16 @@ function getTimerMs(){
   return (h*3600+m*60+s)*1000;
 }
 
-function timerIsSet(){return getTimerMs()>0;}
+function timerIsSet(){return getTimerMs()>0 && timerEnabled;}
 
-function applyTimerToggleBtn(){
+function applyTimerButtons(){
   const btn=document.getElementById('timer-toggle-btn');
+  const enableBtn=document.getElementById('timer-enable-btn');
+  if(enableBtn){
+    const active = timerEnabled && getTimerMs()>0;
+    enableBtn.classList.toggle('active', active);
+    enableBtn.textContent = active ? '⏱ タイマーON' : '⏱ タイマーOFF';
+  }
   if(!btn)return;
   if(timerPanelOpen){
     btn.classList.add('active');
@@ -1513,14 +1531,36 @@ function applyTimerToggleBtn(){
     if(h)h.value=t.h||0;
     if(m)m.value=t.m||0;
     if(s)s.value=t.s||0;
+    timerEnabled = !!t.enabled && ((t.h||0)+(t.m||0)+(t.s||0) > 0);
   }
-  applyTimerToggleBtn();
+  applyTimerButtons();
 })();
 
 document.getElementById('timer-toggle-btn').addEventListener('click',()=>{
   timerPanelOpen=!timerPanelOpen;
   document.getElementById('timer-panel').style.display=timerPanelOpen?'':'none';
-  applyTimerToggleBtn();
+  applyTimerButtons();
+});
+
+document.getElementById('timer-enable-btn').addEventListener('click',()=>{
+  const ms=getTimerMs();
+  if(timerEnabled){
+    timerEnabled=false;
+    timerEndTime=null;
+    timerFired=false;
+  } else if(ms>0){
+    timerEnabled=true;
+  } else {
+    showToast('⏱ タイマーの時間を設定してください');
+    return;
+  }
+  saveTimerSetting(
+    parseInt(document.getElementById('timer-h').value)||0,
+    parseInt(document.getElementById('timer-m').value)||0,
+    parseInt(document.getElementById('timer-s').value)||0,
+    timerEnabled
+  );
+  applyTimerButtons();
 });
 
 // プリセットボタン
@@ -1530,8 +1570,9 @@ document.querySelectorAll('.timer-preset-btn').forEach(btn=>{
     document.getElementById('timer-h').value=0;
     document.getElementById('timer-m').value=min;
     document.getElementById('timer-s').value=0;
-    saveTimerSetting(0,min,0);
-    applyTimerToggleBtn();
+    timerEnabled = min>0;
+    saveTimerSetting(0,min,0,timerEnabled);
+    applyTimerButtons();
   });
 });
 
@@ -1540,8 +1581,9 @@ document.getElementById('timer-clear-btn').addEventListener('click',()=>{
   document.getElementById('timer-h').value=0;
   document.getElementById('timer-m').value=0;
   document.getElementById('timer-s').value=0;
+  timerEnabled=false;
   localStorage.removeItem(LS_TIMER);
-  applyTimerToggleBtn();
+  applyTimerButtons();
 });
 
 // 入力変更時に保存
@@ -1549,12 +1591,12 @@ document.getElementById('timer-clear-btn').addEventListener('click',()=>{
   const el=document.getElementById(id);
   el.addEventListener('change',()=>{
     el.value=Math.max(0,parseInt(el.value)||0);
-    saveTimerSetting(
-      parseInt(document.getElementById('timer-h').value)||0,
-      parseInt(document.getElementById('timer-m').value)||0,
-      parseInt(document.getElementById('timer-s').value)||0
-    );
-    applyTimerToggleBtn();
+    const h=parseInt(document.getElementById('timer-h').value)||0;
+    const m=parseInt(document.getElementById('timer-m').value)||0;
+    const s=parseInt(document.getElementById('timer-s').value)||0;
+    if((h+m+s)===0) timerEnabled=false;
+    saveTimerSetting(h,m,s,timerEnabled);
+    applyTimerButtons();
   });
   el.addEventListener('focus',function(){this.select();});
 });
@@ -1633,7 +1675,7 @@ document.getElementById('start-btn').addEventListener('click',()=>{
   selectedCat=cat;
   sessionState='running';
   // タイマー開始
-  const tms=getTimerMs();
+  const tms=timerEnabled?getTimerMs():0;
   if(tms>0){
     timerDurationMs=tms;
     timerEndTime=new Date(Date.now()+tms);
@@ -1641,7 +1683,7 @@ document.getElementById('start-btn').addEventListener('click',()=>{
     // タイマーパネルを閉じてカウントダウン表示
     timerPanelOpen=false;
     document.getElementById('timer-panel').style.display='none';
-    applyTimerToggleBtn();
+    applyTimerButtons();
     document.getElementById('timer-alert-banner').classList.remove('show');
   } else {
     timerEndTime=null;timerFired=false;
@@ -1661,7 +1703,7 @@ function doStop(){
   // タイマーリセット
   timerEndTime=null;timerFired=false;
   const cd=document.getElementById('timer-countdown');if(cd)cd.style.display='none';
-  applyTimerToggleBtn();
+  applyTimerButtons();
   saveData();renderRecordList();updateControlPanel();
   showToast('⏹ 記録を終了しました');
 }
