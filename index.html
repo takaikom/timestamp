@@ -1,6 +1,47 @@
 <!DOCTYPE html>
+<!-- ============================================================
+  作業記録 v20 - 変更内容 (work-tracker-v19 → v20)
+  ──────────────────────────────────────────────────────────────
+  [記録画面]
+  ・ストップウォッチ表示：カテゴリ選択の上に大きな時計を表示（秒まで）
+  ・最近の記録：開始/終了時刻・経過時間を秒まで表示
+  ・最近の記録：✕ボタン廃止 → 左スワイプで削除（スマホ）
+      PC（pointer:fine）はホバーで✕ボタン表示（finance-tracker-v67と同方式）
+
+  [設定画面]
+  ・カテゴリ並び替え：長押しドラッグ廃止
+      → リスト選択 + ▲▼ボタン（全体1組）で移動（finance-tracker-v67の
+        sort-list-item パターンに準拠）
+
+  [全般]
+  ・ダークモード / ライトモード切替（ヘッダーボタン）
+  ・入力欄：数字系は全選択、メモ系は末尾カーソル
+  ・Enter で確定・入力モード解除
+  ・ボタン押下時に画面が動かないよう min-height 固定などで調整
+  ・ページ遷移前のスクロール位置を復元（タブ切替時に保存/復元）
+  ・「閉じる」ボタンを固定（スクロール画面）
+  ・編集ロックボタン（記録カードのロック）
+  ・同期方式を finance-tracker-v67 と同様に変更（merge/overwrite 選択なし
+    → "ローカル優先マージ" 固定、起動時サイレント同期）
+  ============================================================ -->
 <html lang="ja">
 <head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-WQ2E5LY244"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-WQ2E5LY244');
+  </script>
+  <script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "x2m30n6i8g");
+  </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>作業記録</title>
@@ -29,6 +70,15 @@
   --red:#A32D2D;--red-light:#FCEBEB;--red-mid:#E24B4A;
   --teal:#0E7490;--teal-light:#E0F7FA;
   --pause:#6B42C8;--pause-light:#EEEDFE;
+}
+/* ── DARK MODE ── */
+[data-theme="dark"]{
+  --bg:#2C2925;--surface:#38342F;--surface2:#423D38;
+  --border:rgba(255,255,255,.10);--border2:rgba(255,255,255,.22);
+  --text:#F0EDE8;--text2:#C0BAB3;--text3:#8A847D;
+  --accent-light:#4A2418;--green-light:#223810;--amber-light:#3A280A;
+  --blue-light:#142540;--red-light:#3A1414;--teal-light:#0E2C34;
+  --pause-light:#261A50;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
@@ -251,6 +301,43 @@ textarea.text-input{height:66px;padding:10px 12px;resize:none;line-height:1.5;wi
 .empty-state{text-align:center;padding:40px 20px;color:var(--text3);font-size:14px;line-height:1.9;}
 .toast{position:fixed;bottom:calc(80px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:white;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;z-index:500;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;white-space:nowrap;max-width:90vw;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── DARK MODE ── */
+[data-theme="dark"] .dt-date-input,.dt-time-input{color-scheme:dark;}
+
+/* ── STOPWATCH DISPLAY ── */
+.stopwatch-display{text-align:center;padding:16px 0 10px;font-family:"DM Mono",monospace;font-size:48px;font-weight:500;letter-spacing:2px;color:var(--teal);line-height:1;}
+.stopwatch-display.paused-sw{color:var(--pause);}
+.stopwatch-display.idle-sw{color:var(--border2);}
+.stopwatch-display .sw-ms{font-size:22px;opacity:.7;}
+
+/* ── THEME TOGGLE ── */
+.theme-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;}
+.theme-btn:active{background:var(--surface2);}
+
+/* ── SWIPE DELETE ── */
+.rec-swipe-wrap{position:relative;overflow:hidden;border-radius:14px;margin-bottom:8px;}
+.rec-swipe-wrap .record-card{margin-bottom:0;border-radius:14px;position:relative;transition:transform .2s ease;will-change:transform;touch-action:pan-y;}
+.rec-swipe-bg{position:absolute;right:0;top:0;bottom:0;width:80px;background:var(--red-mid);display:flex;align-items:center;justify-content:center;border-radius:0 14px 14px 0;color:white;font-size:20px;pointer-events:none;}
+@media(pointer:fine){.card-actions .act-btn.del{display:none;}.record-card:hover .card-actions .act-btn.del{display:flex;}}
+@media(pointer:coarse){.card-actions .act-btn.del{display:none;}}
+
+/* ── LOCK BUTTON ── */
+.rec-lock-btn{font-size:15px;background:none;border:none;cursor:pointer;padding:2px 4px;border-radius:6px;color:var(--text3);flex-shrink:0;line-height:1;-webkit-tap-highlight-color:transparent;}
+.rec-lock-btn:active{background:var(--surface2);}
+.rec-lock-btn.locked{color:var(--red-mid);}
+
+/* ── CATEGORY SORT LIST ── */
+.sort-cat-list{border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:10px;}
+.sort-cat-item{display:flex;align-items:center;gap:8px;padding:10px 12px;font-size:13px;color:var(--text2);background:var(--surface);border-bottom:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;}
+.sort-cat-item:last-child{border-bottom:none;}
+.sort-cat-item.selected{background:var(--accent-light);color:var(--accent-dark);font-weight:600;}
+.sort-cat-item-del{margin-left:auto;background:none;border:none;color:var(--text3);font-size:14px;cursor:pointer;padding:2px 4px;flex-shrink:0;border-radius:4px;-webkit-tap-highlight-color:transparent;}
+.sort-cat-item-del:active{color:var(--red-mid);}
+.sort-move-btns{display:flex;gap:6px;margin-bottom:10px;}
+.sort-move-btn{flex:1;height:34px;border-radius:8px;border:1.5px solid var(--border2);background:var(--surface);color:var(--text2);font-size:14px;cursor:pointer;font-family:"Noto Sans JP",sans-serif;-webkit-tap-highlight-color:transparent;}
+.sort-move-btn:active{background:var(--accent-light);color:var(--accent-dark);border-color:var(--accent);}
+.sort-move-btn:disabled{opacity:.3;cursor:not-allowed;}
 </style>
 </head>
 <body>
@@ -311,6 +398,7 @@ textarea.text-input{height:66px;padding:10px 12px;resize:none;line-height:1.5;wi
       <div class="app-title">作業<span>記録</span></div>
       <div class="header-right">
         <div class="sync-dot" id="sync-dot" title="ローカル保存"></div>
+        <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="ダーク/ライト切替">🌙</button>
         <button class="menu-btn" id="menu-btn">☰</button>
       </div>
     </div>
@@ -338,6 +426,9 @@ textarea.text-input{height:66px;padding:10px 12px;resize:none;line-height:1.5;wi
 <!-- ══ TAB: 記録 ══ -->
 <div id="tab-record" class="tab-body">
   <div class="control-panel">
+    <div class="stopwatch-display idle-sw" id="stopwatch-display">
+      <span id="sw-clock">00:00:00</span>
+    </div>
     <div class="panel-label">カテゴリ</div>
     <div class="cat-picker" id="ctrl-cat-picker"></div>
     <input class="cat-free-input" id="ctrl-cat-free" type="text" placeholder="または直接入力…" maxlength="30" autocomplete="off">
@@ -381,9 +472,13 @@ textarea.text-input{height:66px;padding:10px 12px;resize:none;line-height:1.5;wi
   <!-- カテゴリ管理（最上部） -->
   <div class="settings-card">
     <div class="settings-card-title">📂 カテゴリ（自分用）</div>
-    <div class="cat-chip-list" id="cat-chip-list"></div>
-    <div class="add-row">
-      <input class="text-input" id="new-cat-input" type="text" placeholder="新しいカテゴリ名" maxlength="20">
+    <div class="sort-move-btns">
+      <button class="sort-move-btn" id="cat-move-up-btn">▲ 上へ</button>
+      <button class="sort-move-btn" id="cat-move-down-btn">▼ 下へ</button>
+    </div>
+    <div class="sort-cat-list" id="cat-chip-list"></div>
+    <div class="add-row" style="margin-top:10px;">
+      <input class="text-input" id="new-cat-input" type="text" placeholder="新しいカテゴリ名" maxlength="20" autocomplete="off">
       <button class="primary-btn" id="add-cat-btn">追加</button>
     </div>
   </div>
@@ -536,6 +631,8 @@ textarea.text-input{height:66px;padding:10px 12px;resize:none;line-height:1.5;wi
 // STORAGE KEYS
 // ════════════════════════════════════════
 const GROUPS_KEY         = 'wt_groups';
+const LS_THEME           = 'wt_theme';
+const LS_LOCKED_RECS     = 'wt_locked_recs';
 const CURRENT_GROUP_K    = 'wt_current_group';
 const CURRENT_USER_K     = 'wt_current_user';   // per-group: CURRENT_USER_K + '_' + groupId
 const GROUP_DATA_K       = 'wt_gdata';           // per-group: GROUP_DATA_K + '_' + groupId
@@ -737,13 +834,34 @@ function ensureDefaultGroup(){
 // HELPERS
 // ════════════════════════════════════════
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-const fmt=ms=>{if(ms==null||ms<0)return'--:--';const m=Math.floor(ms/60000);return`${Math.floor(m/60)}:${String(m%60).padStart(2,'0')}`;};
-const fdt=iso=>{if(!iso)return'';const d=new Date(iso);return`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;};
+const fmt=ms=>{if(ms==null||ms<0)return'--:--';const s=Math.floor(ms/1000);return`${Math.floor(s/3600)}:${String(Math.floor(s%3600/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;};
+const fdt=iso=>{if(!iso)return'';const d=new Date(iso);return`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;};
 const ymd=iso=>{const d=new Date(iso);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
 const ym =iso=>{const d=new Date(iso);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;};
 
 function showToast(msg){const t=document.getElementById('toast');t.innerHTML=esc(msg);t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400);}
+// ── 入力フォーカス挙動（数字系=全選択、メモ系=末尾） ──
+function focusSelectAll(el){if(el)setTimeout(()=>{el.focus();el.select();},50);}
+function focusEnd(el){if(el)setTimeout(()=>{el.focus();const v=el.value;el.value='';el.value=v;},50);}
+
 function updateDateDisplay(){const d=new Date();const days=['日','月','火','水','木','金','土'];document.getElementById('date-display').textContent=`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${days[d.getDay()]}）`;}
+
+// ── テーマ ──
+function applyTheme(theme){
+  document.documentElement.dataset.theme=theme==='dark'?'dark':'';
+  const btn=document.getElementById('theme-btn');
+  if(btn)btn.textContent=theme==='dark'?'☀️':'🌙';
+}
+function setTheme(theme){localStorage.setItem(LS_THEME,theme);applyTheme(theme);}
+function toggleTheme(){setTheme((localStorage.getItem(LS_THEME)||'light')==='dark'?'light':'dark');}
+// 起動時適用
+applyTheme(localStorage.getItem(LS_THEME)||'light');
+
+// ── 記録ロック ──
+function loadLockedRecs(){try{return new Set(JSON.parse(localStorage.getItem(LS_LOCKED_RECS)||'[]'));}catch{return new Set();}}
+function saveLockedRecs(s){localStorage.setItem(LS_LOCKED_RECS,JSON.stringify([...s]));}
+function isRecLocked(id){return loadLockedRecs().has(String(id));}
+function toggleRecLock(id){const s=loadLockedRecs();if(s.has(String(id)))s.delete(String(id));else s.add(String(id));saveLockedRecs(s);renderRecordList();}
 
 // ════════════════════════════════════════
 // SESSION STATE
@@ -756,6 +874,44 @@ let editingId=null;
 function getActiveRecord(){
   const recs=getRecords();if(!recs.length)return null;
   const last=recs[recs.length-1];return!last.endTime?last:null;
+}
+
+// ── ストップウォッチ表示更新 ──
+function updateStopwatch(){
+  const sw=document.getElementById('stopwatch-display');
+  const hmEl=document.getElementById('sw-hm');
+  const secEl=document.getElementById('sw-sec');
+  if(!sw||!hmEl||!secEl)return;
+  const active=getActiveRecord();
+  let ms=0;
+  if(sessionState==='running'&&active){
+    ms=Date.now()-new Date(active.startTime).getTime();
+    sw.className='stopwatch-display';
+  }else if(sessionState==='paused'){
+    // 一時停止中は最後のactiveのdurationを表示
+    const recs=getRecords();
+    let total=0;
+    // resumedフラグの連続セグメントを合計
+    for(let i=recs.length-1;i>=0;i--){
+      const r=recs[i];
+      if(r.endTime&&r.duration){total+=r.duration;}
+      else break;
+      if(!r.resumed)break;
+    }
+    ms=total;
+    sw.className='stopwatch-display paused-sw';
+  }else{
+    sw.className='stopwatch-display idle-sw';
+    const clockEl=document.getElementById('sw-clock');
+    if(clockEl)clockEl.textContent='00:00:00';
+    return;
+  }
+  const totalSec=Math.floor(ms/1000);
+  const h=Math.floor(totalSec/3600);
+  const m=Math.floor(totalSec%3600/60);
+  const s=totalSec%60;
+  const clockEl=document.getElementById('sw-clock');
+  if(clockEl)clockEl.textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 }
 
 // ════════════════════════════════════════
@@ -1065,7 +1221,7 @@ function renderCtrlCatPicker(){
   }
 }
 
-function updateControlPanel(){
+function updateControlPanel(){updateStopwatch();
   document.getElementById('btn-row-idle').style.display   =sessionState==='idle'?'':'none';
   document.getElementById('btn-row-running').style.display=sessionState==='running'?'':'none';
   document.getElementById('btn-row-paused').style.display =sessionState==='paused'?'':'none';
@@ -1103,6 +1259,12 @@ function updateRunningBanner(){
 // ════════════════════════════════════════
 // START / STOP / PAUSE / RESUME
 // ════════════════════════════════════════
+// メモ入力は末尾カーソル
+document.getElementById('ctrl-memo').addEventListener('focus',function(){const v=this.value;this.value='';this.value=v;});
+// カテゴリ自由入力は全選択
+document.getElementById('ctrl-cat-free').addEventListener('focus',function(){this.select();});
+// Enterでstart（カテゴリ自由入力）
+document.getElementById('ctrl-cat-free').addEventListener('keydown',e=>{if(e.key==='Enter'&&sessionState==='idle')document.getElementById('start-btn').click();});
 document.getElementById('start-btn').addEventListener('click',()=>{
   const freeVal=document.getElementById('ctrl-cat-free').value.trim();
   const cat=freeVal||selectedCat;
@@ -1154,11 +1316,58 @@ document.getElementById('resume-btn').addEventListener('click',()=>{
 // ════════════════════════════════════════
 // RECORD LIST
 // ════════════════════════════════════════
+// ── スワイプ削除セットアップ ──
+const isPointerCoarse=window.matchMedia('(pointer:coarse)').matches||('ontouchstart' in window)||(navigator.maxTouchPoints>0);
+function wrapRecCardWithSwipe(cardEl){
+  if(!isPointerCoarse)return cardEl;
+  const id=cardEl.dataset.id;
+  if(!id)return cardEl;
+  const wrap=document.createElement('div');
+  wrap.className='rec-swipe-wrap';
+  const bg=document.createElement('div');
+  bg.className='rec-swipe-bg';
+  bg.textContent='🗑';
+  wrap.appendChild(bg);
+  wrap.appendChild(cardEl);
+  let startX=0,startY=0,dx=0,swiping=false;
+  const THRESHOLD=72;
+  cardEl.addEventListener('touchstart',e=>{
+    if(e.touches.length!==1)return;
+    startX=e.touches[0].clientX;startY=e.touches[0].clientY;
+    dx=0;swiping=false;
+    cardEl.style.transition='none';
+  },{passive:true});
+  cardEl.addEventListener('touchmove',e=>{
+    if(e.touches.length!==1)return;
+    const cx=e.touches[0].clientX,cy=e.touches[0].clientY;
+    const adx=Math.abs(cx-startX),ady=Math.abs(cy-startY);
+    if(!swiping&&adx<6&&ady<6)return;
+    if(!swiping){if(ady>adx)return;swiping=true;}
+    dx=Math.min(0,cx-startX);
+    cardEl.style.transform=`translateX(${dx}px)`;
+    bg.style.opacity=Math.min(1,Math.abs(dx)/THRESHOLD);
+  },{passive:true});
+  cardEl.addEventListener('touchend',e=>{
+    if(!swiping){cardEl.style.transform='';return;}
+    cardEl.style.transition='transform .2s ease';
+    if(dx<-THRESHOLD&&!isRecLocked(id)){
+      cardEl.style.transform='translateX(-110%)';
+      setTimeout(()=>deleteRecord(Number(id)),200);
+    }else{
+      cardEl.style.transform='';
+      if(dx<-THRESHOLD)showToast('🔒 ロック中のため削除できません');
+    }
+    bg.style.opacity='';
+  },{passive:true});
+  return wrap;
+}
+
 function renderRecordList(){
   const list=document.getElementById('record-list');
   const recs=[...getRecords()].reverse().slice(0,30);
   if(!recs.length){list.innerHTML='<div class="empty-state">まだ記録がありません<br>カテゴリを選んで ▶ START しよう</div>';return;}
-  list.innerHTML=recs.map(r=>{
+  list.innerHTML='';
+  recs.forEach(r=>{
     const isActive=!r.endTime;
     const elapsed=isActive?Date.now()-new Date(r.startTime).getTime():null;
     const dur=r.duration?fmt(r.duration):(isActive?fmt(elapsed):'--:--');
@@ -1166,7 +1375,11 @@ function renderRecordList(){
     const cardCls=isActive?(isPaused?'paused-rec':'active-rec'):'';
     const statusBadge=isActive?(isPaused?'<span style="font-size:10px;color:var(--pause);margin-left:6px;vertical-align:middle;">⏸ 一時停止</span>':'<span style="font-size:10px;color:var(--teal);margin-left:6px;vertical-align:middle;">● 記録中</span>'):'';
     const resumedBadge=r.resumed?'<span style="font-size:10px;color:var(--text3);margin-left:4px;vertical-align:middle;">↩ 再開</span>':'';
-    return`<div class="record-card${cardCls?' '+cardCls:''}">
+    const locked=isRecLocked(r.id);
+    const card=document.createElement('div');
+    card.className='record-card'+(cardCls?' '+cardCls:'');
+    card.dataset.id=r.id;
+    card.innerHTML=`
   <div class="record-info">
     <span class="record-cat-badge">${esc(r.category||'—')}</span>${resumedBadge}${statusBadge}
     <div class="record-time">${fdt(r.startTime)}${r.endTime?` → ${fdt(r.endTime)}`:''}</div>
@@ -1174,17 +1387,20 @@ function renderRecordList(){
   </div>
   <div class="record-dur">${dur}</div>
   <div class="card-actions">
-    <button class="act-btn edit" data-id="${r.id}">✏️</button>
-    <button class="act-btn del" data-id="${r.id}">✕</button>
-  </div>
-</div>`;
-  }).join('');
-  list.querySelectorAll('.act-btn.edit').forEach(b=>b.addEventListener('click',()=>openEdit(Number(b.dataset.id))));
-  list.querySelectorAll('.act-btn.del').forEach(b=>b.addEventListener('click',()=>deleteRecord(Number(b.dataset.id))));
+    <button class="act-btn edit" data-id="${r.id}" ${locked?'disabled style="opacity:.4;cursor:not-allowed;"':''}>✏️</button>
+    <button class="act-btn del" data-id="${r.id}" ${locked?'disabled style="opacity:.4;cursor:not-allowed;"':''}>✕</button>
+    <button class="rec-lock-btn${locked?' locked':''}" data-id="${r.id}" title="${locked?'ロック中':'解除中'}">${locked?'🔒':'🔓'}</button>
+  </div>`;
+    card.querySelector('.act-btn.edit').addEventListener('click',()=>!locked&&openEdit(Number(r.id)));
+    card.querySelector('.act-btn.del').addEventListener('click',()=>!locked&&deleteRecord(Number(r.id)));
+    card.querySelector('.rec-lock-btn').addEventListener('click',()=>toggleRecLock(r.id));
+    const wrapped=wrapRecCardWithSwipe(card);
+    list.appendChild(wrapped);
+  });
 }
 
 function deleteRecord(id){
-  if(!confirm('この記録を削除しますか？'))return;
+  if(isRecLocked(id)){showToast('🔒 ロック中のため削除できません');return;}
   mutateUserRecords(recs=>recs.filter(r=>r.id!==id));
   const active=getActiveRecord();
   if(!active&&sessionState!=='idle'){sessionState='idle';updateControlPanel();}
@@ -1302,78 +1518,39 @@ document.querySelectorAll('.toggle-btn').forEach(btn=>{
 // ════════════════════════════════════════
 // SETTINGS
 // ════════════════════════════════════════
+let _selectedCatIdx=null;
 function renderCatChips(){
   const list=document.getElementById('cat-chip-list');
   const cats=getCats();
-  list.innerHTML=cats.map(c=>`<div class="cat-chip"><span>${esc(c)}</span><button class="cat-chip-del" data-cat="${esc(c)}">✕</button></div>`).join('');
-  list.querySelectorAll('.cat-chip-del').forEach(btn=>{
-    btn.addEventListener('click',()=>{
+  list.innerHTML=cats.map((c,i)=>`<div class="sort-cat-item${_selectedCatIdx===i?' selected':''}" data-idx="${i}"><span>${esc(c)}</span><button class="sort-cat-item-del" data-cat="${esc(c)}">✕</button></div>`).join('');
+  list.querySelectorAll('.sort-cat-item').forEach(item=>{
+    item.addEventListener('click',e=>{
+      if(e.target.classList.contains('sort-cat-item-del'))return;
+      _selectedCatIdx=Number(item.dataset.idx);
+      renderCatChips();
+      updateCatMoveButtons();
+    });
+  });
+  list.querySelectorAll('.sort-cat-item-del').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      e.stopPropagation();
       mutateCats(cs=>cs.filter(c=>c!==btn.dataset.cat));
+      _selectedCatIdx=null;
       saveData();renderCatChips();renderCtrlCatPicker();
       showToast('カテゴリを削除しました');
     });
   });
-
-  // ── 長押しドラッグ並び替え ──
-  let dragIdx=null,ghost=null,offX=0,offY=0,lpTimer=null,dragging=false,sx=0,sy=0;
-  function chips(){return[...list.querySelectorAll('.cat-chip')];}
-  function nearestIdx(cx,cy){
-    let best=null,bestD=Infinity;
-    chips().forEach((c,i)=>{const r=c.getBoundingClientRect();const d=Math.hypot(cx-(r.left+r.width/2),cy-(r.top+r.height/2));if(d<bestD){bestD=d;best=i;}});
-    return best;
-  }
-  function startDrag(chip,cx,cy){
-    dragging=true;dragIdx=chips().indexOf(chip);
-    const r=chip.getBoundingClientRect();offX=cx-r.left;offY=cy-r.top;
-    chip.classList.add('chip-dragging');
-    ghost=document.createElement('div');
-    ghost.className='cat-chip';
-    ghost.style.cssText='position:fixed;z-index:9999;pointer-events:none;opacity:.9;box-shadow:0 4px 16px rgba(0,0,0,.2);background:var(--accent-light);border-color:var(--accent);color:var(--accent-dark);';
-    ghost.textContent=chip.querySelector('span').textContent;
-    document.body.appendChild(ghost);
-    ghost.style.left=(cx-offX)+'px';ghost.style.top=(cy-offY)+'px';
-    if(navigator.vibrate)navigator.vibrate(40);
-  }
-  function moveGhost(cx,cy){if(ghost){ghost.style.left=(cx-offX)+'px';ghost.style.top=(cy-offY)+'px';}}
-  function endDrag(cx,cy){
-    if(!dragging){clearTimeout(lpTimer);lpTimer=null;dragIdx=null;return;}
-    dragging=false;clearTimeout(lpTimer);lpTimer=null;
-    if(ghost){ghost.remove();ghost=null;}
-    list.querySelectorAll('.chip-dragging,.chip-drag-over').forEach(c=>c.classList.remove('chip-dragging','chip-drag-over'));
-    const toIdx=nearestIdx(cx,cy);
-    if(toIdx!=null&&toIdx!==dragIdx){
-      mutateCats(cs=>{const [m]=cs.splice(dragIdx,1);cs.splice(toIdx,0,m);return cs;});
-      saveData();renderCatChips();renderCtrlCatPicker();
-    }
-    dragIdx=null;
-  }
-  list.addEventListener('touchstart',e=>{
-    const chip=e.target.closest('.cat-chip');if(!chip||e.target.classList.contains('cat-chip-del'))return;
-    sx=e.touches[0].clientX;sy=e.touches[0].clientY;dragging=false;
-    lpTimer=setTimeout(()=>startDrag(chip,sx,sy),380);
-  },{passive:true});
-  list.addEventListener('touchmove',e=>{
-    const cx=e.touches[0].clientX,cy=e.touches[0].clientY;
-    if(!dragging&&(Math.abs(cx-sx)>6||Math.abs(cy-sy)>6)){clearTimeout(lpTimer);lpTimer=null;return;}
-    if(!dragging)return;
-    e.preventDefault();moveGhost(cx,cy);
-    list.querySelectorAll('.chip-drag-over').forEach(c=>c.classList.remove('chip-drag-over'));
-    const ti=nearestIdx(cx,cy);if(ti!=null&&ti!==dragIdx)chips()[ti]?.classList.add('chip-drag-over');
-  },{passive:false});
-  list.addEventListener('touchend',e=>{const t=e.changedTouches[0];endDrag(t.clientX,t.clientY);},{passive:true});
-  list.addEventListener('touchcancel',()=>{clearTimeout(lpTimer);lpTimer=null;dragging=false;dragIdx=null;if(ghost){ghost.remove();ghost=null;}list.querySelectorAll('.chip-dragging,.chip-drag-over').forEach(c=>c.classList.remove('chip-dragging','chip-drag-over'));},{passive:true});
-  list.addEventListener('mousedown',e=>{
-    const chip=e.target.closest('.cat-chip');if(!chip||e.target.classList.contains('cat-chip-del'))return;
-    sx=e.clientX;sy=e.clientY;dragging=false;
-    lpTimer=setTimeout(()=>startDrag(chip,sx,sy),280);
-  });
-  document.addEventListener('mousemove',e=>{
-    if(!dragging)return;moveGhost(e.clientX,e.clientY);
-    list.querySelectorAll('.chip-drag-over').forEach(c=>c.classList.remove('chip-drag-over'));
-    const ti=nearestIdx(e.clientX,e.clientY);if(ti!=null&&ti!==dragIdx)chips()[ti]?.classList.add('chip-drag-over');
-  });
-  document.addEventListener('mouseup',e=>{if(dragIdx!=null)endDrag(e.clientX,e.clientY);clearTimeout(lpTimer);lpTimer=null;});
+  updateCatMoveButtons();
 }
+function updateCatMoveButtons(){
+  const cats=getCats();
+  const upBtn=document.getElementById('cat-move-up-btn');
+  const dnBtn=document.getElementById('cat-move-down-btn');
+  if(!upBtn||!dnBtn)return;
+  upBtn.disabled=_selectedCatIdx===null||_selectedCatIdx===0;
+  dnBtn.disabled=_selectedCatIdx===null||_selectedCatIdx>=cats.length-1;
+}
+document.getElementById('new-cat-input').addEventListener('focus',()=>document.getElementById('new-cat-input').select());
 document.getElementById('add-cat-btn').addEventListener('click',()=>{
   const v=document.getElementById('new-cat-input').value.trim();
   if(!v)return;
@@ -1383,6 +1560,16 @@ document.getElementById('add-cat-btn').addEventListener('click',()=>{
   renderCatChips();renderCtrlCatPicker();showToast('✅ カテゴリを追加しました');
 });
 document.getElementById('new-cat-input').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('add-cat-btn').click();});
+document.getElementById('cat-move-up-btn').addEventListener('click',()=>{
+  if(_selectedCatIdx===null||_selectedCatIdx<=0)return;
+  mutateCats(cs=>{const [m]=cs.splice(_selectedCatIdx,1);cs.splice(_selectedCatIdx-1,0,m);return cs;});
+  _selectedCatIdx--;saveData();renderCatChips();renderCtrlCatPicker();
+});
+document.getElementById('cat-move-down-btn').addEventListener('click',()=>{
+  const cats=getCats();if(_selectedCatIdx===null||_selectedCatIdx>=cats.length-1)return;
+  mutateCats(cs=>{const [m]=cs.splice(_selectedCatIdx,1);cs.splice(_selectedCatIdx+1,0,m);return cs;});
+  _selectedCatIdx++;saveData();renderCatChips();renderCtrlCatPicker();
+});
 
 // グループ管理
 function renderGroupManage(){
@@ -2036,8 +2223,13 @@ document.getElementById('menu-deleted-users-btn').addEventListener('click',()=>{
 // ════════════════════════════════════════
 // MAIN TABS
 // ════════════════════════════════════════
+// スクロール位置保存
+const _tabScrollPos={record:0,agg:0,settings:0};
 document.querySelectorAll('.main-tab').forEach(tab=>{
   tab.addEventListener('click',()=>{
+    // 現在のタブのスクロール位置を保存
+    const curId=document.querySelector('.main-tab.active')?.dataset.tab;
+    if(curId)_tabScrollPos[curId]=window.scrollY;
     document.querySelectorAll('.main-tab').forEach(t=>t.classList.remove('active'));
     tab.classList.add('active');
     const id=tab.dataset.tab;
@@ -2046,6 +2238,8 @@ document.querySelectorAll('.main-tab').forEach(tab=>{
     document.getElementById('tab-settings').style.display=id==='settings'?'':'none';
     if(id==='agg')renderAgg();
     if(id==='settings'){renderCatChips();renderGroupManage();refreshGasStatus();}
+    // スクロール位置を復元
+    requestAnimationFrame(()=>window.scrollTo(0,_tabScrollPos[id]||0));
   });
 });
 
@@ -2071,6 +2265,7 @@ function renderAll(){
 // CLOCK
 // ════════════════════════════════════════
 setInterval(()=>{
+  updateStopwatch();
   if(sessionState==='idle')return;
   updateRunningBanner();
   const active=getActiveRecord();
