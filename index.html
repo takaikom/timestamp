@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!-- ============================================================
-  作業記録 v21 - 追加変更メモ (2025-06-06)
+  作業記録 v22 - (2025-06-06)
   ──────────────────────────────────────────────────────────────
   ・STARTボタンの縦幅を2倍（54px → 108px）に変更
   ・記録一覧のカテゴリ名枠（.rec-cat-label）を文字数幅に合わせるよう変更
@@ -9,9 +9,16 @@
       時刻表示の開始位置は全カードで統一を維持
   ・ダークモードでカテゴリ名の文字色を見やすいオレンジ系に変更
       [data-theme="dark"] .rec-cat-label に専用スタイルを追加
-
+  ・タイマー機能を追加
+      「⏱ タイマー設定」ボタンでパネル開閉（通常は非表示）
+      時・分・秒を設定してSTARTするとカウントダウン開始
+      タイマー終了時：アラーム音＋バナー通知（記録は継続）
+      STOPは手動（タイマー終了≠記録終了）
+      タイマー設定はlocalStorageに保存
+ 
   ・カテゴリ幅を固定10文字（10em）に変更 → 「時刻→時刻」開始位置が全カードで揃う
   ・カテゴリ未選択でSTARTしたとき、直前のカテゴリでなく「未設定」が入るよう修正
+
 
   [記録画面]
   ① PC：ホバー時の✕ボタンを編集ボタンの左に表示（誤タップ防止）
@@ -22,6 +29,7 @@
   ③ カテゴリ未選択でも「未設定」でSTART可能
   ④ 記録カード内「時刻→時刻」表示の秒フォントサイズを小さく
 
+  [同期・ヘッダー] (v21 変更内容)
   ・同期方式を finance-tracker-v67 と同様に変更
   ・ヘッダーに GAS↑↓ ボタンを設置
   ・すべての時間表示の秒フォントサイズを小さく
@@ -181,10 +189,10 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .memo-input::placeholder{color:var(--text3);}
 .memo-input:disabled{opacity:.5;cursor:not-allowed;}
 .btn-row{display:flex;align-items:center;gap:10px;margin-top:14px;}
-.start-btn{flex:1;height:108px;border-radius:14px;border:none;background:var(--accent);color:white;font-family:'Noto Sans JP',sans-serif;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.5px;-webkit-tap-highlight-color:transparent;transition:background .15s,transform .1s;}
+.start-btn{flex:1;height:80px;border-radius:14px;border:none;background:var(--accent);color:white;font-family:'Noto Sans JP',sans-serif;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.5px;-webkit-tap-highlight-color:transparent;transition:background .15s,transform .1s;}
 .start-btn:active{background:var(--accent-dark);transform:scale(.98);}
 .start-btn:disabled{background:var(--border2);color:var(--text3);cursor:not-allowed;transform:none;}
-.stop-btn{flex:1;height:108px;border-radius:14px;border:2px solid var(--red-mid);background:var(--red-light);color:var(--red-mid);font-family:'Noto Sans JP',sans-serif;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.5px;-webkit-tap-highlight-color:transparent;transition:all .15s,transform .1s;}
+.stop-btn{flex:1;height:80px;border-radius:14px;border:2px solid var(--red-mid);background:var(--red-light);color:var(--red-mid);font-family:'Noto Sans JP',sans-serif;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.5px;-webkit-tap-highlight-color:transparent;transition:all .15s,transform .1s;}
 .stop-btn:active{background:var(--red-mid);color:white;transform:scale(.98);}
 .pause-btn{width:54px;height:54px;border-radius:14px;border:2px solid var(--pause);background:var(--pause-light);color:var(--pause);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;transition:all .15s,transform .1s;flex-shrink:0;}
 .pause-btn:active{background:var(--pause);color:white;transform:scale(.98);}
@@ -192,6 +200,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .pause-btn.paused:active{background:var(--teal);color:white;}
 .session-info{margin-top:12px;padding:10px 12px;background:var(--surface2);border-radius:10px;display:flex;align-items:center;justify-content:space-between;font-size:12px;}
 .session-info.hidden{display:none;}
+#running-banner,.session-info{display:none!important;}
 .session-cat{font-weight:700;color:var(--text2);}
 .session-cat span{color:var(--accent);}
 .session-timer{font-family:'DM Mono',monospace;font-size:14px;font-weight:500;color:var(--teal);}
@@ -388,6 +397,34 @@ textarea.text-input{height:66px;padding:10px 12px;resize:none;line-height:1.5;wi
 .sort-move-btn{flex:1;height:34px;border-radius:8px;border:1.5px solid var(--border2);background:var(--surface);color:var(--text2);font-size:14px;cursor:pointer;font-family:"Noto Sans JP",sans-serif;-webkit-tap-highlight-color:transparent;}
 .sort-move-btn:active{background:var(--accent-light);color:var(--accent-dark);border-color:var(--accent);}
 .sort-move-btn:disabled{opacity:.3;cursor:not-allowed;}
+
+/* ── TIMER ── */
+.timer-toggle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.timer-toggle-btn{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border2);background:var(--surface2);color:var(--text3);font-family:'Noto Sans JP',sans-serif;-webkit-tap-highlight-color:transparent;transition:all .15s;letter-spacing:.3px;}
+.timer-toggle-btn.active{border-color:var(--teal);background:var(--teal-light);color:var(--teal);}
+.timer-toggle-btn:active{opacity:.7;}
+.timer-panel{background:var(--surface2);border:1.5px solid var(--teal);border-radius:12px;padding:12px 14px;margin-bottom:10px;animation:fadeIn .18s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
+.timer-inputs{display:flex;align-items:center;gap:6px;margin-bottom:10px;}
+.timer-field{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;}
+.timer-field label{font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.5px;}
+.timer-num{width:100%;height:44px;border:1.5px solid var(--border2);border-radius:10px;text-align:center;font-family:'DM Mono',monospace;font-size:22px;font-weight:500;color:var(--text);background:var(--bg);outline:none;transition:border-color .2s;}
+.timer-num:focus{border-color:var(--teal);}
+.timer-sep{font-size:22px;font-weight:700;color:var(--text3);margin-bottom:16px;flex-shrink:0;}
+.timer-presets{display:flex;gap:6px;flex-wrap:wrap;}
+.timer-preset-btn{padding:4px 10px;border-radius:14px;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid var(--border2);background:var(--surface);color:var(--text3);font-family:'Noto Sans JP',sans-serif;-webkit-tap-highlight-color:transparent;transition:all .15s;}
+.timer-preset-btn:active{border-color:var(--teal);background:var(--teal-light);color:var(--teal);}
+.timer-clear-btn{padding:4px 10px;border-radius:14px;font-size:11px;font-weight:600;cursor:pointer;border:1.5px dashed var(--border2);background:transparent;color:var(--text3);font-family:'Noto Sans JP',sans-serif;-webkit-tap-highlight-color:transparent;margin-left:auto;}
+.timer-clear-btn:active{border-color:var(--red-mid);color:var(--red-mid);}
+.timer-countdown{text-align:center;padding:4px 0 8px;font-family:'DM Mono',monospace;font-size:20px;font-weight:600;color:var(--teal);letter-spacing:1px;}
+.timer-countdown.warning{color:var(--amber);animation:blink .8s infinite;}
+.timer-countdown.expired{color:var(--red-mid);}
+.timer-alert-banner{display:none;align-items:center;gap:10px;padding:10px 16px;background:var(--amber-light);border-bottom:2px solid var(--amber);}
+.timer-alert-banner.show{display:flex;}
+.timer-alert-text{font-size:13px;font-weight:600;color:var(--amber);flex:1;}
+[data-theme="dark"] .timer-alert-text{color:#F5C842;}
+.timer-alert-dismiss{padding:5px 14px;border-radius:8px;border:1.5px solid var(--amber);background:transparent;color:var(--amber);font-size:12px;font-weight:600;cursor:pointer;font-family:'Noto Sans JP',sans-serif;flex-shrink:0;}
+.timer-alert-dismiss:active{background:var(--amber);color:white;}
 </style>
 </head>
 <body>
@@ -477,12 +514,50 @@ textarea.text-input{height:66px;padding:10px 12px;resize:none;line-height:1.5;wi
   <div class="running-info" id="running-info">記録中</div>
   <div class="running-elapsed" id="running-elapsed">0:00</div>
 </div>
+<!-- タイマー終了バナー -->
+<div class="timer-alert-banner" id="timer-alert-banner">
+  <span style="font-size:20px;">⏰</span>
+  <div class="timer-alert-text" id="timer-alert-text">タイマーが終了しました</div>
+  <button class="timer-alert-dismiss" id="timer-alert-dismiss">閉じる</button>
+</div>
 
 <!-- ══ TAB: 記録 ══ -->
 <div id="tab-record" class="tab-body">
   <div class="control-panel">
     <div class="stopwatch-display idle-sw" id="stopwatch-display">
       <span id="sw-clock">00:00:<span style="font-size:.7em;">00</span></span>
+    </div>
+    <!-- タイマー設定 -->
+    <div class="timer-toggle-row">
+      <button class="timer-toggle-btn" id="timer-toggle-btn">⏱ タイマー設定</button>
+      <div class="timer-countdown" id="timer-countdown" style="display:none;"></div>
+    </div>
+    <div class="timer-panel" id="timer-panel" style="display:none;">
+      <div class="timer-inputs">
+        <div class="timer-field">
+          <label>時間</label>
+          <input type="number" class="timer-num" id="timer-h" min="0" max="23" value="0" inputmode="numeric">
+        </div>
+        <div class="timer-sep">:</div>
+        <div class="timer-field">
+          <label>分</label>
+          <input type="number" class="timer-num" id="timer-m" min="0" max="59" value="25" inputmode="numeric">
+        </div>
+        <div class="timer-sep">:</div>
+        <div class="timer-field">
+          <label>秒</label>
+          <input type="number" class="timer-num" id="timer-s" min="0" max="59" value="0" inputmode="numeric">
+        </div>
+      </div>
+      <div class="timer-presets">
+        <span style="font-size:11px;color:var(--text3);align-self:center;margin-right:2px;">プリセット：</span>
+        <button class="timer-preset-btn" data-min="5">5分</button>
+        <button class="timer-preset-btn" data-min="10">10分</button>
+        <button class="timer-preset-btn" data-min="25">25分</button>
+        <button class="timer-preset-btn" data-min="45">45分</button>
+        <button class="timer-preset-btn" data-min="60">60分</button>
+        <button class="timer-clear-btn" id="timer-clear-btn">クリア</button>
+      </div>
     </div>
     <div class="panel-label">カテゴリ</div>
     <div class="cat-picker" id="ctrl-cat-picker"></div>
@@ -1005,9 +1080,8 @@ function getActiveRecord(){
 // ── ストップウォッチ表示更新 ──
 function updateStopwatch(){
   const sw=document.getElementById('stopwatch-display');
-  const hmEl=document.getElementById('sw-hm');
-  const secEl=document.getElementById('sw-sec');
-  if(!sw||!hmEl||!secEl)return;
+  const clockEl=document.getElementById('sw-clock');
+  if(!sw||!clockEl)return;
   const active=getActiveRecord();
   let ms=0;
   if(sessionState==='running'&&active){
@@ -1028,16 +1102,14 @@ function updateStopwatch(){
     sw.className='stopwatch-display paused-sw';
   }else{
     sw.className='stopwatch-display idle-sw';
-    const clockEl=document.getElementById('sw-clock');
-    if(clockEl)clockEl.innerHTML='00:00:<span style="font-size:.7em;">00</span>';
+    clockEl.innerHTML='00:00:<span style="font-size:.7em;">00</span>';
     return;
   }
   const totalSec=Math.floor(ms/1000);
   const h=Math.floor(totalSec/3600);
   const m=Math.floor(totalSec%3600/60);
   const s=totalSec%60;
-  const clockEl=document.getElementById('sw-clock');
-  if(clockEl)clockEl.innerHTML=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:<span style="font-size:.7em;">${String(s).padStart(2,'0')}</span>`;
+  clockEl.innerHTML=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:<span style="font-size:.7em;">${String(s).padStart(2,'0')}</span>`;
 }
 
 // ════════════════════════════════════════
@@ -1383,6 +1455,167 @@ function updateRunningBanner(){
 }
 
 // ════════════════════════════════════════
+// TIMER
+// ════════════════════════════════════════
+const LS_TIMER = 'wt_timer_setting';
+let timerPanelOpen = false;
+let timerEndTime = null;    // Date: タイマー終了予定時刻（記録中のみ有効）
+let timerDurationMs = 0;    // 設定した時間(ms)
+let timerFired = false;     // 今セッションで鳴らしたか
+
+function loadTimerSetting(){
+  try{ return JSON.parse(localStorage.getItem(LS_TIMER)||'null'); }catch{ return null; }
+}
+function saveTimerSetting(h,m,s){
+  localStorage.setItem(LS_TIMER, JSON.stringify({h,m,s}));
+}
+
+function getTimerMs(){
+  const h=parseInt(document.getElementById('timer-h').value)||0;
+  const m=parseInt(document.getElementById('timer-m').value)||0;
+  const s=parseInt(document.getElementById('timer-s').value)||0;
+  return (h*3600+m*60+s)*1000;
+}
+
+function timerIsSet(){return getTimerMs()>0;}
+
+function applyTimerToggleBtn(){
+  const btn=document.getElementById('timer-toggle-btn');
+  if(!btn)return;
+  if(timerPanelOpen){
+    btn.classList.add('active');
+    btn.textContent='⏱ タイマー設定 ▲';
+  } else {
+    btn.classList.remove('active');
+    const ms=getTimerMs();
+    if(ms>0){
+      const h=parseInt(document.getElementById('timer-h').value)||0;
+      const m=parseInt(document.getElementById('timer-m').value)||0;
+      const s=parseInt(document.getElementById('timer-s').value)||0;
+      const parts=[];
+      if(h)parts.push(h+'時間');
+      if(m)parts.push(m+'分');
+      if(s)parts.push(s+'秒');
+      btn.textContent='⏱ '+parts.join('')+' ▼';
+    } else {
+      btn.textContent='⏱ タイマー設定';
+    }
+  }
+}
+
+// 起動時に保存済み設定を復元
+(function restoreTimer(){
+  const t=loadTimerSetting();
+  if(t){
+    const h=document.getElementById('timer-h');
+    const m=document.getElementById('timer-m');
+    const s=document.getElementById('timer-s');
+    if(h)h.value=t.h||0;
+    if(m)m.value=t.m||0;
+    if(s)s.value=t.s||0;
+  }
+  applyTimerToggleBtn();
+})();
+
+document.getElementById('timer-toggle-btn').addEventListener('click',()=>{
+  timerPanelOpen=!timerPanelOpen;
+  document.getElementById('timer-panel').style.display=timerPanelOpen?'':'none';
+  applyTimerToggleBtn();
+});
+
+// プリセットボタン
+document.querySelectorAll('.timer-preset-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const min=parseInt(btn.dataset.min)||0;
+    document.getElementById('timer-h').value=0;
+    document.getElementById('timer-m').value=min;
+    document.getElementById('timer-s').value=0;
+    saveTimerSetting(0,min,0);
+    applyTimerToggleBtn();
+  });
+});
+
+// クリアボタン
+document.getElementById('timer-clear-btn').addEventListener('click',()=>{
+  document.getElementById('timer-h').value=0;
+  document.getElementById('timer-m').value=0;
+  document.getElementById('timer-s').value=0;
+  localStorage.removeItem(LS_TIMER);
+  applyTimerToggleBtn();
+});
+
+// 入力変更時に保存
+['timer-h','timer-m','timer-s'].forEach(id=>{
+  const el=document.getElementById(id);
+  el.addEventListener('change',()=>{
+    el.value=Math.max(0,parseInt(el.value)||0);
+    saveTimerSetting(
+      parseInt(document.getElementById('timer-h').value)||0,
+      parseInt(document.getElementById('timer-m').value)||0,
+      parseInt(document.getElementById('timer-s').value)||0
+    );
+    applyTimerToggleBtn();
+  });
+  el.addEventListener('focus',function(){this.select();});
+});
+
+// タイマーアラーム音（AudioContext）
+function playTimerAlarm(){
+  try{
+    const ctx=new (window.AudioContext||window.webkitAudioContext)();
+    ctx.resume().then(()=>{
+      const beepSeq=[0,300,600,900];
+      beepSeq.forEach(offset=>{
+        const osc=ctx.createOscillator();
+        const gain=ctx.createGain();
+        osc.connect(gain);gain.connect(ctx.destination);
+        osc.type='sine';
+        osc.frequency.value=880;
+        gain.gain.setValueAtTime(0,ctx.currentTime+offset/1000);
+        gain.gain.linearRampToValueAtTime(0.5,ctx.currentTime+offset/1000+0.02);
+        gain.gain.linearRampToValueAtTime(0,ctx.currentTime+offset/1000+0.18);
+        osc.start(ctx.currentTime+offset/1000);
+        osc.stop(ctx.currentTime+offset/1000+0.2);
+      });
+      setTimeout(()=>ctx.close(),1500);
+    });
+  }catch(e){console.warn('Timer alarm audio failed:',e);}
+}
+
+function showTimerAlert(catName){
+  const banner=document.getElementById('timer-alert-banner');
+  if(!banner)return;
+  document.getElementById('timer-alert-text').textContent =
+    catName ? `${catName}のタイマーが終了しました` : 'タイマーが終了しました';
+  banner.classList.add('show');
+}
+document.getElementById('timer-alert-dismiss').addEventListener('click',()=>{
+  document.getElementById('timer-alert-banner').classList.remove('show');
+});
+
+function updateTimerCountdown(){
+  const el=document.getElementById('timer-countdown');
+  if(!el)return;
+  if(sessionState!=='running'||!timerEndTime||timerFired){
+    el.style.display='none';
+    return;
+  }
+  const remaining=timerEndTime-Date.now();
+  if(remaining<=0){
+    el.style.display='none';
+    return;
+  }
+  el.style.display='';
+  const totalSec=Math.ceil(remaining/1000);
+  const h=Math.floor(totalSec/3600);
+  const m=Math.floor(totalSec%3600/60);
+  const s=totalSec%60;
+  const str=(h?String(h).padStart(2,'0')+':':'')+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  el.textContent='残り '+str;
+  el.className='timer-countdown'+(totalSec<=60?' warning':'');
+}
+
+// ════════════════════════════════════════
 // START / STOP / PAUSE / RESUME
 // ════════════════════════════════════════
 // メモ入力は末尾カーソル
@@ -1399,6 +1632,20 @@ document.getElementById('start-btn').addEventListener('click',()=>{
   mutateUserRecords(recs=>{recs.push({id:Date.now(),startTime:ts,endTime:null,duration:null,category:cat,memo});return recs;});
   selectedCat=cat;
   sessionState='running';
+  // タイマー開始
+  const tms=getTimerMs();
+  if(tms>0){
+    timerDurationMs=tms;
+    timerEndTime=new Date(Date.now()+tms);
+    timerFired=false;
+    // タイマーパネルを閉じてカウントダウン表示
+    timerPanelOpen=false;
+    document.getElementById('timer-panel').style.display='none';
+    applyTimerToggleBtn();
+    document.getElementById('timer-alert-banner').classList.remove('show');
+  } else {
+    timerEndTime=null;timerFired=false;
+  }
   saveData();
   renderRecordList();updateControlPanel();
   showToast('▶ 記録を開始しました');
@@ -1411,6 +1658,10 @@ function doStop(){
     mutateUserRecords(recs=>recs.map(r=>r.id===active.id?{...r,endTime:ts,duration:new Date(ts)-new Date(r.startTime)}:r));
   }
   sessionState='idle';
+  // タイマーリセット
+  timerEndTime=null;timerFired=false;
+  const cd=document.getElementById('timer-countdown');if(cd)cd.style.display='none';
+  applyTimerToggleBtn();
   saveData();renderRecordList();updateControlPanel();
   showToast('⏹ 記録を終了しました');
 }
@@ -1524,7 +1775,6 @@ function renderRecordList(){
       const tStart=ftm(r.startTime);
       const tEnd=r.endTime?` → ${ftm(r.endTime)}`:(isActive?'<span style="color:var(--teal);"> ● </span>':'');
       const statusBadge=isActive?(isPaused?'<span class="rec-row-badge" style="color:var(--pause);">⏸ 一時停止</span>':''):'';
-      const resumedBadge=r.resumed?'<span class="rec-row-badge">↩ 再開</span>':'';
       const card=document.createElement('div');
       card.className='record-card-row'+(cardCls?' '+cardCls:'');
       card.dataset.id=r.id;
@@ -1532,7 +1782,7 @@ function renderRecordList(){
   <span class="rec-cat-col"><span class="rec-cat-label" title="${esc(catRaw)}">${esc(catDisp)}</span></span>
   <span class="rec-time-range">${tStart}${tEnd}</span>
   ${r.memo?`<span class="rec-row-memo">${esc(r.memo)}</span>`:''}
-  ${(statusBadge||resumedBadge)?`<span class="rec-row-badges">${resumedBadge}${statusBadge}</span>`:''}
+  ${statusBadge?`<span class="rec-row-badges">${statusBadge}</span>`:''}
   <span class="rec-row-dur">${dur}</span>
   <div class="card-actions">
     <button class="act-btn del" data-id="${r.id}" ${locked?'disabled style="opacity:.4;cursor:not-allowed;"':''}>✕</button>
@@ -2604,14 +2854,24 @@ function renderAll(){
 // ════════════════════════════════════════
 setInterval(()=>{
   updateStopwatch();
+  updateTimerCountdown();
   if(sessionState==='idle')return;
   updateRunningBanner();
   const active=getActiveRecord();
   if(active&&sessionState==='running'){
     const elapsed=Date.now()-new Date(active.startTime).getTime();
     document.getElementById('session-timer').innerHTML=fmt(elapsed);
-    const dur=document.querySelector('.record-card.active-rec .record-dur');
+    const dur=document.querySelector('.record-card-row.active-rec .rec-row-dur');
     if(dur)dur.innerHTML=fmt(elapsed);
+    // タイマー終了チェック
+    if(timerEndTime&&!timerFired&&Date.now()>=timerEndTime.getTime()){
+      timerFired=true;
+      playTimerAlarm();
+      const cat=active.category||'未設定';
+      showTimerAlert(cat);
+      const cd=document.getElementById('timer-countdown');
+      if(cd)cd.style.display='none';
+    }
   }
 },1000);
 
