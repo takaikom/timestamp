@@ -1,19 +1,42 @@
 <!DOCTYPE html>
 <!-- ============================================================
-  作業記録 v20 - 変更内容 (work-tracker-v19 → v20)
+  作業記録 v21 - 追加変更メモ (2025-06-06)
   ──────────────────────────────────────────────────────────────
+  ・STARTボタンの縦幅を2倍（54px → 108px）に変更
+  ・記録一覧のカテゴリ名枠（.rec-cat-label）を文字数幅に合わせるよう変更
+      .rec-cat-col（幅10em固定）を外側ラッパーとして追加し、その中でラベルを文字幅に収縮
+      10文字超えは末尾「…」に切り詰め（JS＋CSSの二重保護）
+      時刻表示の開始位置は全カードで統一を維持
+  ・ダークモードでカテゴリ名の文字色を見やすいオレンジ系に変更
+      [data-theme="dark"] .rec-cat-label に専用スタイルを追加
+
+  ・カテゴリ幅を固定10文字（10em）に変更 → 「時刻→時刻」開始位置が全カードで揃う
+  ・カテゴリ未選択でSTARTしたとき、直前のカテゴリでなく「未設定」が入るよう修正
+
   [記録画面]
+  ① PC：ホバー時の✕ボタンを編集ボタンの左に表示（誤タップ防止）
+  ② 最近の記録を日付ごとのグループカードに変更
+     ・日付ヘッダーを追加、カード内の日付表示を削除
+     ・カード1行化：カテゴリ（全角8文字以内＋省略）→ 時刻→時刻 → 経過時間
+     ・「時刻→時刻」の秒部分のフォントサイズを小さく
+  ③ カテゴリ未選択でも「未設定」でSTART可能
+  ④ 記録カード内「時刻→時刻」表示の秒フォントサイズを小さく
+
+  ・同期方式を finance-tracker-v67 と同様に変更
+  ・ヘッダーに GAS↑↓ ボタンを設置
+  ・すべての時間表示の秒フォントサイズを小さく
+
+  [記録画面] (v20 変更内容)
   ・ストップウォッチ表示：カテゴリ選択の上に大きな時計を表示（秒まで）
   ・最近の記録：開始/終了時刻・経過時間を秒まで表示
   ・最近の記録：✕ボタン廃止 → 左スワイプで削除（スマホ）
-      PC（pointer:fine）はホバーで✕ボタン表示（finance-tracker-v67と同方式）
+      PC（pointer:fine）はホバーで✕ボタン表示
 
-  [設定画面]
+  [設定画面] (v20)
   ・カテゴリ並び替え：長押しドラッグ廃止
-      → リスト選択 + ▲▼ボタン（全体1組）で移動（finance-tracker-v67の
-        sort-list-item パターンに準拠）
+      → リスト選択 + ▲▼ボタン（全体1組）で移動
 
-  [全般]
+  [全般] (v20)
   ・ダークモード / ライトモード切替（ヘッダーボタン）
   ・入力欄：数字系は全選択、メモ系は末尾カーソル
   ・Enter で確定・入力モード解除
@@ -21,8 +44,6 @@
   ・ページ遷移前のスクロール位置を復元（タブ切替時に保存/復元）
   ・「閉じる」ボタンを固定（スクロール画面）
   ・編集ロックボタン（記録カードのロック）
-  ・同期方式を finance-tracker-v67 と同様に変更（merge/overwrite 選択なし
-    → "ローカル優先マージ" 固定、起動時サイレント同期）
   ============================================================ -->
 <html lang="ja">
 <head>
@@ -160,10 +181,10 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .memo-input::placeholder{color:var(--text3);}
 .memo-input:disabled{opacity:.5;cursor:not-allowed;}
 .btn-row{display:flex;align-items:center;gap:10px;margin-top:14px;}
-.start-btn{flex:1;height:54px;border-radius:14px;border:none;background:var(--accent);color:white;font-family:'Noto Sans JP',sans-serif;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.5px;-webkit-tap-highlight-color:transparent;transition:background .15s,transform .1s;}
+.start-btn{flex:1;height:108px;border-radius:14px;border:none;background:var(--accent);color:white;font-family:'Noto Sans JP',sans-serif;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.5px;-webkit-tap-highlight-color:transparent;transition:background .15s,transform .1s;}
 .start-btn:active{background:var(--accent-dark);transform:scale(.98);}
 .start-btn:disabled{background:var(--border2);color:var(--text3);cursor:not-allowed;transform:none;}
-.stop-btn{flex:1;height:54px;border-radius:14px;border:2px solid var(--red-mid);background:var(--red-light);color:var(--red-mid);font-family:'Noto Sans JP',sans-serif;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.5px;-webkit-tap-highlight-color:transparent;transition:all .15s,transform .1s;}
+.stop-btn{flex:1;height:108px;border-radius:14px;border:2px solid var(--red-mid);background:var(--red-light);color:var(--red-mid);font-family:'Noto Sans JP',sans-serif;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.5px;-webkit-tap-highlight-color:transparent;transition:all .15s,transform .1s;}
 .stop-btn:active{background:var(--red-mid);color:white;transform:scale(.98);}
 .pause-btn{width:54px;height:54px;border-radius:14px;border:2px solid var(--pause);background:var(--pause-light);color:var(--pause);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;transition:all .15s,transform .1s;flex-shrink:0;}
 .pause-btn:active{background:var(--pause);color:white;transform:scale(.98);}
@@ -304,6 +325,10 @@ textarea.text-input{height:66px;padding:10px 12px;resize:none;line-height:1.5;wi
 
 /* ── DARK MODE ── */
 [data-theme="dark"] .dt-date-input,.dt-time-input{color-scheme:dark;}
+/* ダークモードのカテゴリ名を見やすい色に */
+[data-theme="dark"] .rec-cat-label{background:#5A2E18;color:#F4A070;}
+[data-theme="dark"] .active-rec .rec-cat-label{background:rgba(14,116,144,.35);color:#5DD8F0;}
+[data-theme="dark"] .paused-rec .rec-cat-label{background:rgba(107,66,200,.30);color:#C4AAFF;}
 
 /* ── STOPWATCH DISPLAY ── */
 .stopwatch-display{text-align:center;padding:16px 0 10px;font-family:"DM Mono",monospace;font-size:48px;font-weight:500;letter-spacing:2px;color:var(--teal);line-height:1;}
@@ -317,10 +342,35 @@ textarea.text-input{height:66px;padding:10px 12px;resize:none;line-height:1.5;wi
 
 /* ── SWIPE DELETE ── */
 .rec-swipe-wrap{position:relative;overflow:hidden;border-radius:14px;margin-bottom:8px;}
-.rec-swipe-wrap .record-card{margin-bottom:0;border-radius:14px;position:relative;transition:transform .2s ease;will-change:transform;touch-action:pan-y;}
+.rec-swipe-wrap .record-card,.rec-swipe-wrap .record-card-row{margin-bottom:0;border-radius:10px;position:relative;transition:transform .2s ease;will-change:transform;touch-action:pan-y;}
 .rec-swipe-bg{position:absolute;right:0;top:0;bottom:0;width:80px;background:var(--red-mid);display:flex;align-items:center;justify-content:center;border-radius:0 14px 14px 0;color:white;font-size:20px;pointer-events:none;}
-@media(pointer:fine){.card-actions .act-btn.del{display:none;}.record-card:hover .card-actions .act-btn.del{display:flex;}}
+/* PC：✕ボタンは編集ボタンの左に出現（誤タップ防止） */
+@media(pointer:fine){
+  .card-actions{flex-direction:row;}
+  .card-actions .act-btn.del{display:none;order:-1;}
+  .record-card-row:hover .card-actions .act-btn.del{display:flex;}
+}
 @media(pointer:coarse){.card-actions .act-btn.del{display:none;}}
+/* 日付グループ */
+.rec-date-group{margin-bottom:10px;}
+.rec-date-header{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.5px;padding:2px 4px 5px;display:flex;justify-content:space-between;align-items:center;}
+.rec-date-header-label{color:var(--text2);}
+.rec-date-total{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);}
+/* コンパクト1行カード */
+.record-card-row{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:7px 10px;display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.record-card-row.active-rec{background:var(--teal-light);border-color:rgba(14,116,144,.25);border-left:3px solid var(--teal);}
+.record-card-row.paused-rec{background:var(--pause-light);border-color:rgba(107,66,200,.2);border-left:3px solid var(--pause);}
+.rec-cat-col{width:10em;min-width:10em;flex-shrink:0;display:flex;align-items:center;}
+.rec-cat-label{display:inline-block;font-size:12px;font-weight:700;color:var(--accent-dark);background:var(--accent-light);padding:1px 6px;border-radius:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+.active-rec .rec-cat-label{background:rgba(14,116,144,.15);color:var(--teal);}
+.paused-rec .rec-cat-label{background:rgba(107,66,200,.12);color:var(--pause);}
+.rec-time-range{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);flex-shrink:0;white-space:nowrap;}
+.rec-row-dur{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--text2);min-width:46px;text-align:right;flex-shrink:0;margin-left:auto;}
+.active-rec .rec-row-dur{color:var(--teal);}
+.paused-rec .rec-row-dur{color:var(--pause);}
+.rec-row-memo{font-size:11px;color:var(--text3);flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+.rec-row-badges{display:flex;gap:3px;flex-shrink:0;}
+.rec-row-badge{font-size:9px;padding:1px 4px;border-radius:3px;background:var(--surface2);color:var(--text3);}
 
 /* ── LOCK BUTTON ── */
 .rec-lock-btn{font-size:15px;background:none;border:none;cursor:pointer;padding:2px 4px;border-radius:6px;color:var(--text3);flex-shrink:0;line-height:1;-webkit-tap-highlight-color:transparent;}
@@ -397,12 +447,17 @@ textarea.text-input{height:66px;padding:10px 12px;resize:none;line-height:1.5;wi
     <div class="header-top">
       <div class="app-title">作業<span>記録</span></div>
       <div class="header-right">
-        <div class="sync-dot" id="sync-dot" title="ローカル保存"></div>
+        <div class="sync-dot" id="sync-dot" title="ローカル保存のみ"></div>
+        <button class="menu-btn" id="gas-upload-btn" title="GASへアップロード" style="font-size:16px;">↑</button>
+        <button class="menu-btn" id="gas-download-btn" title="GASからダウンロード" style="font-size:16px;">↓</button>
         <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="ダーク/ライト切替">🌙</button>
         <button class="menu-btn" id="menu-btn">☰</button>
       </div>
     </div>
-    <div class="header-sub" id="date-display"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:0 14px 2px;">
+      <div class="header-sub" id="date-display" style="padding:0;"></div>
+      <div id="gas-sync-time" style="font-size:10px;color:var(--text3);display:none;white-space:nowrap;flex-shrink:0;margin-left:8px;"></div>
+    </div>
   </div>
   <!-- グループタブ -->
   <div class="group-tabs" id="group-tabs"></div>
@@ -427,7 +482,7 @@ textarea.text-input{height:66px;padding:10px 12px;resize:none;line-height:1.5;wi
 <div id="tab-record" class="tab-body">
   <div class="control-panel">
     <div class="stopwatch-display idle-sw" id="stopwatch-display">
-      <span id="sw-clock">00:00:00</span>
+      <span id="sw-clock">00:00:<span style="font-size:.7em;">00</span></span>
     </div>
     <div class="panel-label">カテゴリ</div>
     <div class="cat-picker" id="ctrl-cat-picker"></div>
@@ -736,12 +791,52 @@ function mutateCats(fn){
 // ════════════════════════════════════════
 // SYNC DOT / GAS
 // ════════════════════════════════════════
+const GAS_SYNC_TIME_KEY='wt_gas_sync_time';
+const GAS_AUTO_SYNC_KEY='wt_gas_auto_sync';
+const GAS_AUTO_SYNC_INTERVAL_KEY='wt_gas_auto_sync_interval';
+function getAutoSync(){return localStorage.getItem(GAS_AUTO_SYNC_KEY)!=='0';}
+function setAutoSync(v){localStorage.setItem(GAS_AUTO_SYNC_KEY,v?'1':'0');refreshGasStatus();}
+function getAutoSyncInterval(){const v=parseFloat(localStorage.getItem(GAS_AUTO_SYNC_INTERVAL_KEY)||'0');return isNaN(v)?0:v;}
+function setAutoSyncInterval(min){localStorage.setItem(GAS_AUTO_SYNC_INTERVAL_KEY,String(min));startPeriodicSync();}
+
+// ── 定期自動同期タイマー ──
+let _periodicSyncTimer=null;
+function startPeriodicSync(){
+  if(_periodicSyncTimer){clearInterval(_periodicSyncTimer);_periodicSyncTimer=null;}
+  const min=getAutoSyncInterval();
+  if(!min||min<=0||!getGroupGasUrl()||!getAutoSync())return;
+  _periodicSyncTimer=setInterval(async()=>{
+    if(!getGroupGasUrl()||!getAutoSync())return;
+    await syncFromRemote(true);
+    const now=new Date().toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    setGasSyncTime('auto',now);
+  },min*60*1000);
+}
+function getGasSyncTime(){try{return JSON.parse(localStorage.getItem(GAS_SYNC_TIME_KEY)||'null');}catch{return null;}}
+function setGasSyncTime(type,dt){
+  const cur=getGasSyncTime()||{};
+  cur[type]=dt;
+  localStorage.setItem(GAS_SYNC_TIME_KEY,JSON.stringify(cur));
+  renderGasSyncTime();
+}
+function renderGasSyncTime(){
+  const el=document.getElementById('gas-sync-time');
+  if(!el)return;
+  const url=getGroupGasUrl();
+  if(!url){el.style.display='none';return;}
+  const t=getGasSyncTime();
+  const upStr=t&&t.upload?'↑ '+t.upload:'↑ なし';
+  const dnStr=t&&t.download?'↓ '+t.download:'↓ なし';
+  const autoStr=(getAutoSync()&&t&&t.auto)?'🔄 '+t.auto:'';
+  el.textContent='GAS: '+upStr+'  /  '+dnStr+(autoStr?'  /  '+autoStr:'');
+  el.style.display='';
+}
+
 function setSyncDot(state){
   const dot=document.getElementById('sync-dot');
   dot.className='sync-dot'+(state!=='off'?' '+state:'');
   dot.title={ok:'同期済み',err:'同期エラー',syncing:'同期中…',off:'ローカル保存のみ'}[state]||'';
 }
-// ── REMOTE（つづけると同じ方式）──
 async function remoteLoad(url){
   const u=url||getGroupGasUrl();if(!u)return null;
   try{const res=await fetch(u,{cache:'no-store'});const data=await res.json();return data&&data.users?data:null;}
@@ -750,17 +845,44 @@ async function remoteLoad(url){
 async function remoteSave(data){
   const url=getGroupGasUrl();if(!url)return false;
   setSyncDot('syncing');
-  try{await fetch(url,{method:'POST',body:JSON.stringify(data)});setSyncDot('ok');return true;}
-  catch{setSyncDot('err');return false;}
+  try{
+    await fetch(url,{method:'POST',body:JSON.stringify(data)});
+    setSyncDot('ok');return true;
+  }catch{setSyncDot('err');return false;}
 }
 
 async function saveData(){
   const local=loadGroupData();
-  saveGroupData(local); // ローカルは必ず即時保存
-  if(getGroupGasUrl()){
-    const cg=getCurrentGroup();
-    const dataToSave=cg?{...local,groupName:cg.name}:local;
-    remoteSave(dataToSave).then(ok=>{if(!ok)setSyncDot('err');}).catch(()=>setSyncDot('err'));
+  saveGroupData(local);
+  if(getGroupGasUrl()&&getAutoSync()){
+    const gs=loadGroups();const id=getCurrentGroupId();
+    const cg=gs.find(g=>g.id===id);
+    const curUid=getCurrentUserId();
+    const curUser=local.users.find(u=>u.id===curUid)||local.users[0];
+    const remote=await remoteLoad();
+    let baseUsers;
+    if(remote&&remote.users){
+      baseUsers=remote.users.map(ru=>{
+        if(ru.id===curUser.id){return {...ru,records:curUser.records||[]};}
+        return ru;
+      });
+      if(!baseUsers.find(u=>u.id===curUser.id))baseUsers.push({...curUser});
+    }else{
+      baseUsers=[{...curUser}];
+    }
+    const remoteDeleted=remote&&remote.deletedUsers?remote.deletedUsers:[];
+    const localDeleted=local.deletedUsers||[];
+    const mergedDeleted=[...remoteDeleted];
+    localDeleted.forEach(lu=>{if(!mergedDeleted.find(u=>u.id===lu.id))mergedDeleted.push(lu);});
+    const filteredUsers=baseUsers.filter(u=>!mergedDeleted.find(d=>d.id===u.id));
+    const payload={users:filteredUsers,deletedUsers:mergedDeleted,groupName:cg?cg.name:(remote&&remote.groupName?remote.groupName:'')};
+    const ok=await remoteSave(payload);
+    if(ok){
+      const now=new Date().toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+      setGasSyncTime('upload',now);
+    }
+  }else{
+    setSyncDot(getGroupGasUrl()?'ok':'off');
   }
 }
 
@@ -834,8 +956,12 @@ function ensureDefaultGroup(){
 // HELPERS
 // ════════════════════════════════════════
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-const fmt=ms=>{if(ms==null||ms<0)return'--:--';const s=Math.floor(ms/1000);return`${Math.floor(s/3600)}:${String(Math.floor(s%3600/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;};
+const fmt=ms=>{if(ms==null||ms<0)return'--:--';const s=Math.floor(ms/1000);return`${Math.floor(s/3600)}:${String(Math.floor(s%3600/60)).padStart(2,'0')}:<span style="font-size:.75em;">${String(s%60).padStart(2,'0')}</span>`;};
 const fdt=iso=>{if(!iso)return'';const d=new Date(iso);return`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;};
+// 時刻のみ（秒をスモールspan付き）
+const ftm=iso=>{if(!iso)return'';const d=new Date(iso);return`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}<span style="font-size:.75em;">${String(d.getSeconds()).padStart(2,'0')}</span>`;};
+// 日付のみ（日付グループヘッダー用）
+const fdate=iso=>{if(!iso)return'';const d=new Date(iso);const w=['日','月','火','水','木','金','土'];return`${d.getMonth()+1}/${d.getDate()}（${w[d.getDay()]})`;};
 const ymd=iso=>{const d=new Date(iso);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
 const ym =iso=>{const d=new Date(iso);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;};
 
@@ -903,7 +1029,7 @@ function updateStopwatch(){
   }else{
     sw.className='stopwatch-display idle-sw';
     const clockEl=document.getElementById('sw-clock');
-    if(clockEl)clockEl.textContent='00:00:00';
+    if(clockEl)clockEl.innerHTML='00:00:<span style="font-size:.7em;">00</span>';
     return;
   }
   const totalSec=Math.floor(ms/1000);
@@ -911,7 +1037,7 @@ function updateStopwatch(){
   const m=Math.floor(totalSec%3600/60);
   const s=totalSec%60;
   const clockEl=document.getElementById('sw-clock');
-  if(clockEl)clockEl.textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  if(clockEl)clockEl.innerHTML=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:<span style="font-size:.7em;">${String(s).padStart(2,'0')}</span>`;
 }
 
 // ════════════════════════════════════════
@@ -1238,7 +1364,7 @@ function updateControlPanel(){updateStopwatch();
     const cat=active?active.category:selectedCat;
     const elapsed=active?Date.now()-new Date(active.startTime).getTime():0;
     document.getElementById('session-cat-label').innerHTML=`<span>${esc(cat||'—')}</span>${sessionState==='paused'?'　⏸ 一時停止中':''}`;
-    document.getElementById('session-timer').textContent=fmt(elapsed);
+    document.getElementById('session-timer').innerHTML=fmt(elapsed);
   }
   updateRunningBanner();
   renderCtrlCatPicker();
@@ -1253,7 +1379,7 @@ function updateRunningBanner(){
   const cat=active?active.category:selectedCat;
   document.getElementById('running-info').textContent=cat||(sessionState==='paused'?'一時停止中':'記録中');
   const elapsed=active?Date.now()-new Date(active.startTime).getTime():0;
-  document.getElementById('running-elapsed').textContent=fmt(elapsed);
+  document.getElementById('running-elapsed').innerHTML=fmt(elapsed);
 }
 
 // ════════════════════════════════════════
@@ -1267,8 +1393,7 @@ document.getElementById('ctrl-cat-free').addEventListener('focus',function(){thi
 document.getElementById('ctrl-cat-free').addEventListener('keydown',e=>{if(e.key==='Enter'&&sessionState==='idle')document.getElementById('start-btn').click();});
 document.getElementById('start-btn').addEventListener('click',()=>{
   const freeVal=document.getElementById('ctrl-cat-free').value.trim();
-  const cat=freeVal||selectedCat;
-  if(!cat){showToast('⚠ カテゴリを選択または入力してください');return;}
+  const cat=freeVal?freeVal:(selectedCat?selectedCat:'未設定');
   const ts=new Date().toISOString();
   const memo=document.getElementById('ctrl-memo').value.trim();
   mutateUserRecords(recs=>{recs.push({id:Date.now(),startTime:ts,endTime:null,duration:null,category:cat,memo});return recs;});
@@ -1364,38 +1489,64 @@ function wrapRecCardWithSwipe(cardEl){
 
 function renderRecordList(){
   const list=document.getElementById('record-list');
-  const recs=[...getRecords()].reverse().slice(0,30);
+  const recs=[...getRecords()].reverse().slice(0,60);
   if(!recs.length){list.innerHTML='<div class="empty-state">まだ記録がありません<br>カテゴリを選んで ▶ START しよう</div>';return;}
   list.innerHTML='';
+  // 日付でグループ化
+  const byDate=new Map();
   recs.forEach(r=>{
-    const isActive=!r.endTime;
-    const elapsed=isActive?Date.now()-new Date(r.startTime).getTime():null;
-    const dur=r.duration?fmt(r.duration):(isActive?fmt(elapsed):'--:--');
-    const isPaused=isActive&&sessionState==='paused';
-    const cardCls=isActive?(isPaused?'paused-rec':'active-rec'):'';
-    const statusBadge=isActive?(isPaused?'<span style="font-size:10px;color:var(--pause);margin-left:6px;vertical-align:middle;">⏸ 一時停止</span>':'<span style="font-size:10px;color:var(--teal);margin-left:6px;vertical-align:middle;">● 記録中</span>'):'';
-    const resumedBadge=r.resumed?'<span style="font-size:10px;color:var(--text3);margin-left:4px;vertical-align:middle;">↩ 再開</span>':'';
-    const locked=isRecLocked(r.id);
-    const card=document.createElement('div');
-    card.className='record-card'+(cardCls?' '+cardCls:'');
-    card.dataset.id=r.id;
-    card.innerHTML=`
-  <div class="record-info">
-    <span class="record-cat-badge">${esc(r.category||'—')}</span>${resumedBadge}${statusBadge}
-    <div class="record-time">${fdt(r.startTime)}${r.endTime?` → ${fdt(r.endTime)}`:''}</div>
-    ${r.memo?`<div class="record-memo">${esc(r.memo)}</div>`:''}
-  </div>
-  <div class="record-dur">${dur}</div>
+    const d=ymd(r.startTime);
+    if(!byDate.has(d))byDate.set(d,[]);
+    byDate.get(d).push(r);
+  });
+  byDate.forEach((dayRecs,date)=>{
+    const d=new Date(date+'T00:00:00');
+    const w=['日','月','火','水','木','金','土'];
+    const label=`${d.getMonth()+1}/${d.getDate()}（${w[d.getDay()]}）`;
+    const dayMs=dayRecs.filter(r=>r.duration).reduce((s,r)=>s+r.duration,0);
+    const grp=document.createElement('div');
+    grp.className='rec-date-group';
+    const hdr=document.createElement('div');
+    hdr.className='rec-date-header';
+    hdr.innerHTML=`<span class="rec-date-header-label">${label}</span><span class="rec-date-total">${dayMs?fmt(dayMs):''}</span>`;
+    grp.appendChild(hdr);
+    dayRecs.forEach(r=>{
+      const isActive=!r.endTime;
+      const elapsed=isActive?Date.now()-new Date(r.startTime).getTime():null;
+      const dur=r.duration?fmt(r.duration):(isActive?fmt(elapsed):'--:--');
+      const isPaused=isActive&&sessionState==='paused';
+      const cardCls=isActive?(isPaused?'paused-rec':'active-rec'):'';
+      const locked=isRecLocked(r.id);
+      // カテゴリ名を全角8文字で切り詰め
+      const catRaw=r.category||'未設定';
+      const catDisp=[...catRaw].length>10?[...catRaw].slice(0,10).join('')+'…':catRaw;
+      // 時刻表示（秒スモール付き）
+      const tStart=ftm(r.startTime);
+      const tEnd=r.endTime?` → ${ftm(r.endTime)}`:(isActive?'<span style="color:var(--teal);"> ● </span>':'');
+      const statusBadge=isActive?(isPaused?'<span class="rec-row-badge" style="color:var(--pause);">⏸ 一時停止</span>':''):'';
+      const resumedBadge=r.resumed?'<span class="rec-row-badge">↩ 再開</span>':'';
+      const card=document.createElement('div');
+      card.className='record-card-row'+(cardCls?' '+cardCls:'');
+      card.dataset.id=r.id;
+      card.innerHTML=`
+  <span class="rec-cat-col"><span class="rec-cat-label" title="${esc(catRaw)}">${esc(catDisp)}</span></span>
+  <span class="rec-time-range">${tStart}${tEnd}</span>
+  ${r.memo?`<span class="rec-row-memo">${esc(r.memo)}</span>`:''}
+  ${(statusBadge||resumedBadge)?`<span class="rec-row-badges">${resumedBadge}${statusBadge}</span>`:''}
+  <span class="rec-row-dur">${dur}</span>
   <div class="card-actions">
-    <button class="act-btn edit" data-id="${r.id}" ${locked?'disabled style="opacity:.4;cursor:not-allowed;"':''}>✏️</button>
     <button class="act-btn del" data-id="${r.id}" ${locked?'disabled style="opacity:.4;cursor:not-allowed;"':''}>✕</button>
+    <button class="act-btn edit" data-id="${r.id}" ${locked?'disabled style="opacity:.4;cursor:not-allowed;"':''}>✏️</button>
     <button class="rec-lock-btn${locked?' locked':''}" data-id="${r.id}" title="${locked?'ロック中':'解除中'}">${locked?'🔒':'🔓'}</button>
   </div>`;
-    card.querySelector('.act-btn.edit').addEventListener('click',()=>!locked&&openEdit(Number(r.id)));
-    card.querySelector('.act-btn.del').addEventListener('click',()=>!locked&&deleteRecord(Number(r.id)));
-    card.querySelector('.rec-lock-btn').addEventListener('click',()=>toggleRecLock(r.id));
-    const wrapped=wrapRecCardWithSwipe(card);
-    list.appendChild(wrapped);
+      card.querySelector('.act-btn.edit').addEventListener('click',()=>!locked&&openEdit(Number(r.id)));
+      card.querySelector('.act-btn.del').addEventListener('click',()=>!locked&&deleteRecord(Number(r.id)));
+      card.querySelector('.rec-lock-btn').addEventListener('click',()=>toggleRecLock(r.id));
+      // スワイプラップ（スマホ）
+      const wrapped=wrapRecCardWithSwipe(card);
+      grp.appendChild(wrapped);
+    });
+    list.appendChild(grp);
   });
 }
 
@@ -1457,7 +1608,7 @@ function updateEditDurHint(){
   const s=dateTimeToISO(document.getElementById('edit-start-date').value,document.getElementById('edit-start-time').value);
   const e=dateTimeToISO(document.getElementById('edit-end-date').value,document.getElementById('edit-end-time').value);
   const hint=document.getElementById('edit-dur-hint');
-  if(s&&e){const diff=new Date(e)-new Date(s);hint.textContent=diff<=0?'⚠ 終了が開始より前です':`⏱ ${fmt(diff)}`;hint.className='dur-hint'+(diff<=0?' err':'');}
+  if(s&&e){const diff=new Date(e)-new Date(s);hint.innerHTML=diff<=0?'⚠ 終了が開始より前です':`⏱ ${fmt(diff)}`;hint.className='dur-hint'+(diff<=0?' err':'');}
   else{hint.textContent='';hint.className='dur-hint';}
 }
 ['edit-start-date','edit-end-date'].forEach(id=>document.getElementById(id).addEventListener('change',updateEditDurHint));
@@ -1795,10 +1946,17 @@ function renderGroupManage(){
 // GAS設定
 function refreshGasStatus(){
   const url=getGroupGasUrl();
-  document.getElementById('gas-url-input').value=url;
+  const el2=document.getElementById('gas-url-input');
+  if(el2)el2.value=url||'';
   const el=document.getElementById('gas-status');
-  if(url){el.textContent='🔗 GAS連携が設定されています（このグループ）';el.className='sync-status-text ok';setSyncDot('ok');}
-  else{el.textContent='未設定（ローカル保存のみ）';el.className='sync-status-text';setSyncDot('off');}
+  if(!url){
+    setSyncDot('off');
+    if(el){el.textContent='未設定（ローカル保存のみ）';el.className='sync-status-text';}
+  }else{
+    setSyncDot('ok');
+    if(el){el.textContent='🔗 GAS連携が設定されています（このグループ）';el.className='sync-status-text ok';}
+  }
+  renderGasSyncTime();
 }
 document.getElementById('gas-save-btn').addEventListener('click',async()=>{
   const url=document.getElementById('gas-url-input').value.trim();
@@ -1970,17 +2128,197 @@ document.getElementById('menu-close-btn').addEventListener('click',()=>document.
 document.getElementById('menu-sheet').addEventListener('click',e=>{if(e.target.id==='menu-sheet')document.getElementById('menu-sheet').classList.remove('open');});
 document.getElementById('menu-sync-btn').addEventListener('click',async()=>{
   document.getElementById('menu-sheet').classList.remove('open');
-  if(!getGroupGasUrl()){showToast('⚠ GAS URLが設定されていません');return;}
-  const local=loadGroupData();const cg=getCurrentGroup();
-  setSyncDot('syncing');
-  const ok=await remoteSave(cg?{...local,groupName:cg.name}:local);
-  if(ok)showToast('☁️ GASへ送信しました');else showToast('⚠ 送信に失敗しました');
+  gasUploadMerge();
 });
 document.getElementById('menu-sync-from-btn').addEventListener('click',async()=>{
   document.getElementById('menu-sheet').classList.remove('open');
-  if(!getGroupGasUrl()){showToast('⚠ GAS URLが設定されていません');return;}
-  await syncFromRemote();
+  gasDownloadAction();
 });
+
+// ── ヘッダー GAS↑ ──
+async function gasUploadMerge(){
+  if(!getGroupGasUrl()){showToast('⚠ GAS URLが設定されていません（設定タブで入力）');return;}
+  setSyncDot('syncing');
+  const remote=await remoteLoad();
+  const local=loadGroupData();
+  const cg=getCurrentGroup();
+  const curUid=getCurrentUserId();
+  const myUser=local.users.find(u=>u.id===curUid)||local.users[0];
+  let baseUsers;
+  if(remote&&remote.users){
+    baseUsers=remote.users.map(ru=>{
+      if(ru.id===myUser.id){return {...ru,records:myUser.records||[]};}
+      return ru;
+    });
+    local.users.forEach(lu=>{if(!baseUsers.find(u=>u.id===lu.id))baseUsers.push({...lu});});
+  }else{
+    baseUsers=local.users.map(u=>({...u}));
+  }
+  const remoteDeleted=remote&&remote.deletedUsers?remote.deletedUsers:[];
+  const localDeleted=local.deletedUsers||[];
+  const mergedDeleted=[...remoteDeleted];
+  localDeleted.forEach(lu=>{if(!mergedDeleted.find(u=>u.id===lu.id))mergedDeleted.push(lu);});
+  const filteredUsers=baseUsers.filter(u=>!mergedDeleted.find(d=>d.id===u.id));
+  const payload={users:filteredUsers,deletedUsers:mergedDeleted,groupName:cg?cg.name:(remote&&remote.groupName?remote.groupName:'')};
+  const ok=await remoteSave(payload);
+  if(ok){
+    const now=new Date().toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    setGasSyncTime('upload',now);
+    showToast('☁️ 記録データを送信しました');
+  }else showToast('⚠ 送信に失敗しました');
+}
+
+document.getElementById('gas-upload-btn').addEventListener('click',()=>{
+  if(!getGroupGasUrl()){showToast('⚠ GAS URLが設定されていません（設定タブで入力）');return;}
+  const curUser=getCurrentUser();
+  const uName=curUser?curUser.name:'このユーザー';
+  const sel=document.createElement('div');
+  sel.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:flex-end;justify-content:center;';
+  sel.innerHTML=`<div style="background:var(--surface);border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:480px;animation:slideUp .22s cubic-bezier(.22,1,.36,1);">
+    <div style="font-size:15px;font-weight:700;margin-bottom:4px;">☁️ GASへアップロード</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:16px;">アップロード方法を選んでください</div>
+    <button id="_gup-merge" style="display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:500;cursor:pointer;margin-bottom:8px;text-align:left;">
+      <span style="width:36px;height:36px;border-radius:10px;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">↑</span>
+      <div>
+        <div>GASへアップロード（記録のみ統合）</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:400;margin-top:1px;">「${uName}」の記録をGASと統合します。</div>
+      </div>
+    </button>
+    <button id="_gup-overwrite" style="display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:500;cursor:pointer;margin-bottom:16px;text-align:left;">
+      <span style="width:36px;height:36px;border-radius:10px;background:var(--red-light);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">☁️</span>
+      <div>
+        <div>GASを完全上書き（記録・設定・削除）</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:400;margin-top:1px;">「${uName}」のGASデータをデバイスデータで完全に置き換えます。</div>
+      </div>
+    </button>
+    <button id="_gup-cancel" style="width:100%;height:44px;border-radius:12px;border:none;background:var(--surface2);color:var(--text2);font-family:'Noto Sans JP',sans-serif;font-size:14px;cursor:pointer;">キャンセル</button>
+  </div>`;
+  document.body.appendChild(sel);
+  sel.querySelector('#_gup-merge').addEventListener('click',()=>{sel.remove();gasUploadMerge();});
+  sel.querySelector('#_gup-overwrite').addEventListener('click',()=>{
+    sel.remove();
+    const local=loadGroupData();const cg=getCurrentGroup();
+    const curUid=getCurrentUserId();
+    const myUser=local.users.find(u=>u.id===curUid)||local.users[0];
+    const ov=document.createElement('div');
+    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;display:flex;align-items:flex-end;justify-content:center;';
+    ov.innerHTML=`<div style="background:var(--surface);border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:480px;animation:slideUp .22s cubic-bezier(.22,1,.36,1);">
+      <div style="font-size:15px;font-weight:700;margin-bottom:8px;">☁️ GASを完全上書き</div>
+      <div style="font-size:12px;color:var(--red-mid);margin-bottom:16px;">⚠️ GAS上のこのユーザーのデータをこのデバイスのデータで完全に置き換えます。</div>
+      <div style="display:flex;gap:8px;">
+        <button id="_gow-cancel" style="flex:1;height:44px;border-radius:12px;border:none;background:var(--surface2);color:var(--text2);font-family:inherit;font-size:14px;cursor:pointer;">キャンセル</button>
+        <button id="_gow-confirm" style="flex:1;height:44px;border-radius:12px;border:none;background:var(--red-mid);color:white;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">完全上書きする</button>
+      </div>
+    </div>`;
+    document.body.appendChild(ov);
+    ov.querySelector('#_gow-cancel').addEventListener('click',()=>ov.remove());
+    ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
+    ov.querySelector('#_gow-confirm').addEventListener('click',async()=>{
+      ov.remove();setSyncDot('syncing');
+      const remote=await remoteLoad();
+      let baseUsers;
+      if(remote&&remote.users){
+        baseUsers=remote.users.map(ru=>{
+          if(ru.id===myUser.id){return{...myUser};}
+          return ru;
+        });
+        if(!baseUsers.find(u=>u.id===myUser.id))baseUsers.push({...myUser});
+      }else{
+        baseUsers=[{...myUser}];
+      }
+      const localDeleted=local.deletedUsers||[];
+      const filteredUsers=baseUsers.filter(u=>!localDeleted.find(d=>d.id===u.id));
+      const payload={users:filteredUsers,deletedUsers:localDeleted,groupName:cg?cg.name:(remote&&remote.groupName?remote.groupName:'')};
+      const ok=await remoteSave(payload);
+      if(ok){
+        const now=new Date().toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+        setGasSyncTime('upload',now);
+        showToast('☁️ GASデータを完全上書きしました');
+      }else showToast('⚠ 送信に失敗しました');
+    });
+  });
+  sel.querySelector('#_gup-cancel').addEventListener('click',()=>sel.remove());
+  sel.addEventListener('click',e=>{if(e.target===sel)sel.remove();});
+});
+
+// ── ヘッダー GAS↓ ──
+async function gasDownloadOverwrite(){
+  setSyncDot('syncing');
+  const remote=await remoteLoad();
+  if(!remote){setSyncDot('err');showToast('⚠ 同期に失敗しました');return;}
+  const local=loadGroupData();
+  const merged={...remote,deletedUsers:remote.deletedUsers||local.deletedUsers||[]};
+  saveGroupData(merged);
+  if(remote.groupName){
+    const gs=loadGroups();const id=getCurrentGroupId();
+    const g=gs.find(g=>g.id===id);
+    if(g&&g.gasUrl&&remote.groupName!==g.name){g.name=remote.groupName;saveGroups(gs);}
+  }
+  const pinned=getPinnedUserId();
+  const currentIsValid=!!merged.users.find(u=>u.id===getCurrentUserId());
+  if(!currentIsValid){
+    if(pinned&&merged.users.find(u=>u.id===pinned))setCurrentUserId(pinned);
+    else if(merged.users.length)setCurrentUserId(merged.users[0].id);
+  }
+  const now=new Date().toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  setGasSyncTime('download',now);
+  setSyncDot('ok');
+  showToast('⬇️ GASデータで完全上書きしました');
+  renderAll();
+}
+
+function gasDownloadAction(){
+  if(!getGroupGasUrl()){showToast('⚠ GAS URLが設定されていません（設定タブで入力）');return;}
+  const sel=document.createElement('div');
+  sel.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:flex-end;justify-content:center;';
+  sel.innerHTML=`<div style="background:var(--surface);border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:480px;animation:slideUp .22s cubic-bezier(.22,1,.36,1);">
+    <div style="font-size:15px;font-weight:700;margin-bottom:4px;">⬇️ GASからダウンロード</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:16px;">受信方法を選んでください</div>
+    <button id="_gdl-merge" style="display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:500;cursor:pointer;margin-bottom:8px;text-align:left;">
+      <span style="width:36px;height:36px;border-radius:10px;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">↓</span>
+      <div>
+        <div>マージして受信（ローカルデータと統合）</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:400;margin-top:1px;">ローカルの記録を保持しつつGASのデータを取り込みます。</div>
+      </div>
+    </button>
+    <button id="_gdl-overwrite" style="display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:500;cursor:pointer;margin-bottom:16px;text-align:left;">
+      <span style="width:36px;height:36px;border-radius:10px;background:var(--red-light);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">⬇️</span>
+      <div>
+        <div>完全上書きで受信（GASデータで置換）</div>
+        <div style="font-size:11px;color:var(--text3);font-weight:400;margin-top:1px;">ローカルのデータをGASのデータで完全に置き換えます。ローカルのみのデータは失われます。</div>
+      </div>
+    </button>
+    <button id="_gdl-cancel" style="width:100%;height:44px;border-radius:12px;border:none;background:var(--surface2);color:var(--text2);font-family:'Noto Sans JP',sans-serif;font-size:14px;cursor:pointer;">キャンセル</button>
+  </div>`;
+  document.body.appendChild(sel);
+  sel.querySelector('#_gdl-merge').addEventListener('click',async()=>{
+    sel.remove();
+    await syncFromRemote(false);
+    const now=new Date().toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    setGasSyncTime('download',now);
+  });
+  sel.querySelector('#_gdl-overwrite').addEventListener('click',()=>{
+    sel.remove();
+    const conf=document.createElement('div');
+    conf.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;display:flex;align-items:flex-end;justify-content:center;';
+    conf.innerHTML=`<div style="background:var(--surface);border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:480px;animation:slideUp .22s cubic-bezier(.22,1,.36,1);">
+      <div style="font-size:15px;font-weight:700;margin-bottom:8px;">⬇️ GASで完全上書き</div>
+      <div style="font-size:12px;color:var(--red-mid);margin-bottom:16px;">⚠️ このデバイスのローカルデータはGASのデータに完全に置き換えられます。</div>
+      <div style="display:flex;gap:8px;">
+        <button id="_gdl-ow-cancel" style="flex:1;height:44px;border-radius:12px;border:none;background:var(--surface2);color:var(--text2);font-family:inherit;font-size:14px;cursor:pointer;">キャンセル</button>
+        <button id="_gdl-ow-confirm" style="flex:1;height:44px;border-radius:12px;border:none;background:var(--red-mid);color:white;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">完全上書きする</button>
+      </div>
+    </div>`;
+    document.body.appendChild(conf);
+    conf.querySelector('#_gdl-ow-cancel').addEventListener('click',()=>conf.remove());
+    conf.querySelector('#_gdl-ow-confirm').addEventListener('click',()=>{conf.remove();gasDownloadOverwrite();});
+    conf.addEventListener('click',e=>{if(e.target===conf)conf.remove();});
+  });
+  sel.querySelector('#_gdl-cancel').addEventListener('click',()=>sel.remove());
+  sel.addEventListener('click',e=>{if(e.target===sel)sel.remove();});
+}
+
+document.getElementById('gas-download-btn').addEventListener('click',()=>gasDownloadAction());
 document.getElementById('menu-export-btn').addEventListener('click',()=>{document.getElementById('menu-sheet').classList.remove('open');exportCSV('raw');});
 document.getElementById('menu-backup-btn').addEventListener('click',()=>{document.getElementById('menu-sheet').classList.remove('open');backupJSON();showToast('💾 バックアップを保存しました');});
 document.getElementById('menu-import-btn').addEventListener('click',()=>{document.getElementById('menu-sheet').classList.remove('open');document.getElementById('import-file-input').click();});
@@ -2271,43 +2609,14 @@ setInterval(()=>{
   const active=getActiveRecord();
   if(active&&sessionState==='running'){
     const elapsed=Date.now()-new Date(active.startTime).getTime();
-    document.getElementById('session-timer').textContent=fmt(elapsed);
+    document.getElementById('session-timer').innerHTML=fmt(elapsed);
     const dur=document.querySelector('.record-card.active-rec .record-dur');
-    if(dur)dur.textContent=fmt(elapsed);
+    if(dur)dur.innerHTML=fmt(elapsed);
   }
 },1000);
 
-// ── 定期同期（30秒）──
-// 自動同期：UIを強制rerenderしない（ユーザー操作を妨げない）
-// 代わりに30秒ごとにリモートのデータをバックグラウンドでローカルにマージするだけ
-let _autoSyncTimer=null;
-function scheduleAutoSync(){
-  if(_autoSyncTimer)clearInterval(_autoSyncTimer);
-  _autoSyncTimer=setInterval(async()=>{
-    if(!getGroupGasUrl())return;
-    // silent=true：画面rerenderなし、syncDotも変えない
-    const remote=await remoteLoad();if(!remote)return;
-    const local=loadGroupData();
-    // 他ユーザーのデータだけ静かにマージ
-    let changed=false;
-    // 削除済みユーザーを先にマージして復活チェックに使う
-    const remoteDeleted=remote.deletedUsers||[];
-    const localDeleted=local.deletedUsers||[];
-    remoteDeleted.forEach(ru=>{if(!localDeleted.find(u=>u.id===ru.id)){localDeleted.push(ru);changed=true;}});
-    (remote.users||[]).forEach(ru=>{
-      // ローカルで削除済みのユーザーはスキップ（復活させない）
-      if(localDeleted.find(u=>u.id===ru.id))return;
-      const lu=local.users.find(u=>u.id===ru.id);
-      if(!lu){if(!ru.cats)ru.cats=DEFAULT_CATS.slice();local.users.push(ru);changed=true;}
-      else{
-        const lrIds=new Set((lu.records||[]).map(r=>r.id));
-        (ru.records||[]).forEach(rr=>{if(!lrIds.has(rr.id)){lu.records.push(rr);changed=true;}});
-      }
-    });
-    if(changed){local.deletedUsers=localDeleted;saveGroupData(local);}
-  },30000);
-}
-scheduleAutoSync();
+// ── 定期同期（finance-tracker方式：設定可能インターバル）──
+startPeriodicSync();
 
 // ════════════════════════════════════════
 // WELCOME SCREEN
@@ -2492,6 +2801,7 @@ document.getElementById('menu-switch-user-btn').addEventListener('click',()=>{
 updateDateDisplay();
 setInterval(updateDateDisplay,60000);
 ensureDefaultGroup();
+renderGasSyncTime();
 
 // ════════════════════════════════════════
 // SESSION RESTORE（どこからでも呼べる関数）
